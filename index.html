@@ -8,8 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Inter & Courier Prime for Receipt -->
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -39,7 +39,6 @@
             overflow: hidden;
         }
 
-        /* Serrated / Zigzag Edge for Thermal Receipt Bottom */
         .receipt-zigzag {
             position: relative;
         }
@@ -158,7 +157,6 @@
                 </button>
             </nav>
 
-            <!-- USER INFO FOOTER -->
             <div class="p-4 border-t border-slate-800/80 bg-slate-950 flex items-center justify-between">
                 <div>
                     <p id="currentUserDisplay" class="text-xs font-bold text-white truncate max-w-[130px]">User Name</p>
@@ -175,7 +173,6 @@
 
             <!-- TAB 1: POS TERMINAL -->
             <section id="tab-pos" class="tab-content flex-1 flex overflow-hidden">
-                <!-- PRODUCT CATALOG & SEARCH -->
                 <div class="flex-1 p-6 flex flex-col gap-4 overflow-hidden border-r border-slate-200 bg-white">
                     <div class="flex items-center gap-3">
                         <div class="relative flex-1">
@@ -187,7 +184,6 @@
                         </select>
                     </div>
 
-                    <!-- PRODUCTS GRID -->
                     <div id="posProductsGrid" class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pr-1">
                         <!-- Rendered dynamically -->
                     </div>
@@ -202,12 +198,10 @@
                         <button onclick="clearCart()" class="text-[11px] text-red-500 hover:text-red-700 font-bold tracking-wide">Clear Cart</button>
                     </div>
 
-                    <!-- CART ITEMS LIST -->
                     <div id="cartItemsList" class="flex-1 overflow-y-auto p-4 space-y-2.5">
                         <!-- Rendered dynamically -->
                     </div>
 
-                    <!-- CHECKOUT SUMMARY -->
                     <div class="p-5 bg-white border-t border-slate-200 space-y-3 shadow-2xl">
                         <div class="space-y-2 text-xs font-medium text-slate-600">
                             <div class="flex justify-between">
@@ -246,7 +240,7 @@
                 </div>
             </section>
 
-            <!-- TAB 2: INVENTORY MANAGEMENT -->
+            <!-- TAB 2: INVENTORY -->
             <section id="tab-inventory" class="tab-content flex-1 p-6 overflow-y-auto hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
@@ -279,7 +273,7 @@
                 </div>
             </section>
 
-            <!-- TAB 3: SUPPLIER MANAGEMENT -->
+            <!-- TAB 3: SUPPLIERS -->
             <section id="tab-suppliers" class="tab-content flex-1 p-6 overflow-y-auto hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
@@ -296,7 +290,7 @@
                 </div>
             </section>
 
-            <!-- TAB 4: ACCOUNTS MANAGEMENT -->
+            <!-- TAB 4: ACCOUNTS -->
             <section id="tab-accounts" class="tab-content flex-1 p-6 overflow-y-auto hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
@@ -326,7 +320,7 @@
                 </div>
             </section>
 
-            <!-- TAB 5: SALES HISTORY -->
+            <!-- TAB 5: SALES -->
             <section id="tab-sales" class="tab-content flex-1 p-6 overflow-y-auto hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
@@ -358,41 +352,93 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- PAYMENT CHECKOUT MODAL                     -->
+    <!-- INTERACTIVE PAYMENT CHECKOUT MODAL         -->
     <!-- ========================================== -->
-    <div id="checkoutModal" class="fixed inset-0 z-50 bg-slate-950 bg-opacity-70 backdrop-blur-sm flex items-center justify-center hidden">
-        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full mx-4 space-y-4 border border-slate-100">
-            <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-cash-register text-emerald-600"></i> Finalize Payment
-            </h3>
+    <div id="checkoutModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-md w-full border border-slate-100 space-y-4">
             
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1">
-                <span class="text-[11px] font-bold text-slate-400 uppercase">Total Amount Due</span>
-                <p id="modalPayableAmount" class="font-mono font-black text-2xl text-slate-900">₱0.00</p>
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-cash-register text-emerald-600"></i> Finalize Payment
+                </h3>
+                <span id="modalPayableAmount" class="font-mono font-black text-xl text-emerald-600">₱0.00</span>
             </div>
 
+            <!-- PAYMENT METHOD TABS -->
             <div>
-                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Payment Method</label>
-                <select id="modalPaymentMethod" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-bold bg-white">
-                    <option value="Cash">Cash</option>
-                    <option value="GCash / E-Wallet">GCash / E-Wallet</option>
-                    <option value="Credit / Debit Card">Credit / Debit Card</option>
-                </select>
+                <label class="block text-[11px] font-bold text-slate-400 uppercase mb-2 tracking-wider">Payment Method</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="selectPaymentMethod('Cash')" id="payTab-Cash" class="pay-tab py-2.5 px-2 border-2 border-emerald-500 bg-emerald-50 text-emerald-800 font-bold rounded-xl text-xs flex flex-col items-center gap-1 transition">
+                        <i class="fa-solid fa-money-bill-wave text-base"></i> Cash
+                    </button>
+                    <button type="button" onclick="selectPaymentMethod('GCash / E-Wallet')" id="payTab-GCash" class="pay-tab py-2.5 px-2 border-2 border-slate-200 text-slate-600 font-bold rounded-xl text-xs flex flex-col items-center gap-1 transition hover:border-emerald-300">
+                        <i class="fa-solid fa-qrcode text-base"></i> GCash / QR
+                    </button>
+                    <button type="button" onclick="selectPaymentMethod('Credit / Debit Card')" id="payTab-Card" class="pay-tab py-2.5 px-2 border-2 border-slate-200 text-slate-600 font-bold rounded-xl text-xs flex flex-col items-center gap-1 transition hover:border-emerald-300">
+                        <i class="fa-solid fa-credit-card text-base"></i> Card
+                    </button>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Amount Tendered (₱)</label>
-                <input type="number" step="0.01" id="modalAmountPaid" oninput="calculateChange()" placeholder="0.00" class="w-full border border-slate-300 rounded-xl p-3 text-xl font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50/50">
+            <input type="hidden" id="modalPaymentMethod" value="Cash">
+
+            <!-- 1. CASH SECTION -->
+            <div id="sectionCash" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Amount Tendered (₱)</label>
+                    <input type="number" step="0.01" id="modalAmountPaid" oninput="calculateChange()" placeholder="0.00" class="w-full border border-slate-300 rounded-xl p-3 text-2xl font-mono font-black focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50/50">
+                </div>
+                <div class="flex justify-between text-xs items-center p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="font-bold text-slate-600">Change Due:</span>
+                    <span id="modalChangeDue" class="font-mono font-black text-emerald-600 text-lg">₱0.00</span>
+                </div>
             </div>
 
-            <div class="flex justify-between text-xs items-center pt-2 border-t border-slate-200">
-                <span class="font-bold text-slate-600">Change Due:</span>
-                <span id="modalChangeDue" class="font-mono font-black text-emerald-600 text-lg">₱0.00</span>
+            <!-- 2. GCASH QR SECTION -->
+            <div id="sectionGCash" class="hidden space-y-3">
+                <div class="bg-gradient-to-br from-blue-600 to-sky-500 p-4 rounded-2xl text-white text-center space-y-2 shadow-lg">
+                    <div class="flex items-center justify-between border-b border-blue-400/40 pb-2">
+                        <span class="text-xs font-black tracking-wider uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-mobile-screen-button"></i> GCash Scan to Pay
+                        </span>
+                        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-mono font-bold" id="gcashRefCode">GC-849201</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl inline-block shadow-inner">
+                        <img id="gcashQrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=GCASH-MINIMART-PAYMENT" alt="GCash QR Code" class="w-36 h-36 mx-auto">
+                    </div>
+                    <p class="text-[11px] font-medium opacity-90">Scan QR Code using GCash App to settle amount</p>
+                </div>
+            </div>
+
+            <!-- 3. CREDIT / DEBIT CARD SECTION -->
+            <div id="sectionCard" class="hidden space-y-3">
+                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-4 rounded-2xl text-white space-y-3 shadow-xl relative overflow-hidden">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-mono tracking-widest text-slate-400">POS CARD TERMINAL</span>
+                        <i class="fa-brands fa-cc-visa text-2xl text-slate-200"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[9px] uppercase tracking-wider text-slate-400">Cardholder Name</span>
+                        <input type="text" id="cardHolderName" value="JUAN DELA CRUZ" class="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="col-span-2 space-y-1">
+                            <span class="text-[9px] uppercase tracking-wider text-slate-400">Card Number</span>
+                            <input type="text" value="4532 •••• •••• 8892" class="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-[9px] uppercase tracking-wider text-slate-400">Expiry</span>
+                            <input type="text" value="12/28" class="w-full bg-slate-800/80 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white focus:outline-none">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="flex gap-3 pt-2">
                 <button onclick="closeCheckoutModal()" class="flex-1 py-3 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
-                <button onclick="processTransaction()" id="btnCompleteSale" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-extrabold shadow-md">Complete Sale</button>
+                <button onclick="processTransaction()" id="btnCompleteSale" class="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-3 rounded-xl text-xs font-extrabold shadow-md transform active:scale-95 transition">
+                    <i class="fa-solid fa-circle-check mr-1"></i> Complete Sale
+                </button>
             </div>
         </div>
     </div>
@@ -400,9 +446,8 @@
     <!-- ========================================== -->
     <!-- ANIMATED THERMAL RECEIPT MODAL             -->
     <!-- ========================================== -->
-    <div id="receiptModal" class="fixed inset-0 z-50 bg-slate-950 bg-opacity-80 backdrop-blur-md flex flex-col items-center justify-center hidden p-4">
+    <div id="receiptModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center hidden p-4">
         
-        <!-- SIMULATED POS PRINTER SLOT TOP BAR -->
         <div class="w-full max-w-md bg-slate-900 rounded-t-2xl p-4 border-b-4 border-slate-950 shadow-2xl flex items-center justify-between z-20 relative">
             <div class="flex items-center gap-2">
                 <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -411,19 +456,16 @@
             <i class="fa-solid fa-print text-slate-400 text-lg"></i>
         </div>
 
-        <!-- FLOWING THERMAL PAPER CONTAINER -->
         <div class="w-full max-w-md bg-slate-800/50 rounded-b-2xl p-2 overflow-hidden max-h-[80vh] flex flex-col items-center">
             
             <div id="thermalPaper" class="receipt-paper receipt-zigzag w-full bg-[#fffef9] text-slate-900 p-6 shadow-2xl animate-feed-paper overflow-y-auto max-h-[65vh] border-t-2 border-slate-200">
                 
-                <!-- STORE HEADER -->
                 <div class="text-center pb-4 border-b border-dashed border-slate-400 space-y-1">
                     <h3 class="receipt-font font-bold text-lg text-slate-900">MINI MART EXPRESS</h3>
                     <p class="receipt-font text-[11px] text-slate-600">Branch #04 - Main Boulevard</p>
                     <p class="receipt-font text-[10px] text-slate-500">TEL: (02) 8888-0199 | VAT REG TIN: 402-192-001</p>
                 </div>
 
-                <!-- METADATA -->
                 <div class="py-3 border-b border-dashed border-slate-400 receipt-font text-xs space-y-1 text-slate-700">
                     <div class="flex justify-between">
                         <span>RECEIPT NO:</span>
@@ -439,7 +481,6 @@
                     </div>
                 </div>
 
-                <!-- PURCHASED ITEMS TABLE -->
                 <div class="py-3 border-b border-dashed border-slate-400">
                     <div class="receipt-font text-[11px] font-bold grid grid-cols-12 mb-2 text-slate-800">
                         <span class="col-span-6">ITEM</span>
@@ -451,7 +492,6 @@
                     </div>
                 </div>
 
-                <!-- FINANCIAL SUMMARY -->
                 <div class="py-3 border-b border-dashed border-slate-400 receipt-font text-xs space-y-1 text-slate-800">
                     <div class="flex justify-between">
                         <span>SUBTOTAL:</span>
@@ -471,7 +511,6 @@
                     </div>
                 </div>
 
-                <!-- TENDER DETAILS -->
                 <div class="py-3 border-b border-dashed border-slate-400 receipt-font text-xs space-y-1 text-slate-700">
                     <div class="flex justify-between">
                         <span>PAYMENT METHOD:</span>
@@ -487,7 +526,6 @@
                     </div>
                 </div>
 
-                <!-- BARCODE & FOOTER -->
                 <div class="text-center pt-4 space-y-2">
                     <p class="receipt-font text-[11px] text-slate-600 font-bold">THANK YOU FOR SHOPPING WITH US!</p>
                     <div class="flex flex-col items-center justify-center">
@@ -498,7 +536,6 @@
 
             </div>
 
-            <!-- ACTION BUTTONS -->
             <div class="flex gap-3 w-full mt-4">
                 <button onclick="printReceipt()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md flex items-center justify-center gap-2">
                     <i class="fa-solid fa-print"></i> Print / Save PDF
@@ -511,7 +548,7 @@
 
     </div>
 
-    <!-- MODAL FOR PRODUCTS, SUPPLIERS, ACCOUNTS -->
+    <!-- MODAL FOR PRODUCTS -->
     <div id="productModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden">
         <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-md w-full mx-4 space-y-4">
             <h3 class="text-lg font-black text-slate-800" id="productModalTitle">Add Product</h3>
@@ -558,7 +595,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- JAVASCRIPT APP LOGIC                       -->
+    <!-- JAVASCRIPT APPLICATION LOGIC               -->
     <!-- ========================================== -->
     <script>
         // GLOBAL STATE
@@ -568,7 +605,6 @@
         let allSuppliers = [];
         let allAccounts = [];
         let cart = [];
-        let lastCompletedTransaction = null;
 
         // TOAST NOTIFICATIONS
         function showNotification(message, type = 'success') {
@@ -816,13 +852,54 @@
         function openCheckoutModal() {
             const { grandTotal } = calculateCartTotals();
             document.getElementById('modalPayableAmount').innerText = `₱${grandTotal.toFixed(2)}`;
-            document.getElementById('modalAmountPaid').value = '';
-            document.getElementById('modalChangeDue').innerText = '₱0.00';
+            selectPaymentMethod('Cash');
             document.getElementById('checkoutModal').classList.remove('hidden');
         }
 
         function closeCheckoutModal() {
             document.getElementById('checkoutModal').classList.add('hidden');
+        }
+
+        function selectPaymentMethod(method) {
+            document.getElementById('modalPaymentMethod').value = method;
+
+            document.querySelectorAll('.pay-tab').forEach(tab => {
+                tab.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-800');
+                tab.classList.add('border-slate-200', 'text-slate-600');
+            });
+
+            const methodKey = method.split(' ')[0];
+            const activeTab = document.getElementById(`payTab-${methodKey}`);
+            if (activeTab) {
+                activeTab.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-800');
+            }
+
+            const { grandTotal } = calculateCartTotals();
+            const sectionCash = document.getElementById('sectionCash');
+            const sectionGCash = document.getElementById('sectionGCash');
+            const sectionCard = document.getElementById('sectionCard');
+
+            sectionCash.classList.add('hidden');
+            sectionGCash.classList.add('hidden');
+            sectionCard.classList.add('hidden');
+
+            if (method === 'Cash') {
+                sectionCash.classList.remove('hidden');
+                document.getElementById('modalAmountPaid').value = '';
+                document.getElementById('modalChangeDue').innerText = '₱0.00';
+            } else if (method === 'GCash / E-Wallet') {
+                sectionGCash.classList.remove('hidden');
+                document.getElementById('modalAmountPaid').value = grandTotal.toFixed(2);
+                document.getElementById('modalChangeDue').innerText = '₱0.00';
+                
+                const randomRef = 'GC-' + Math.floor(100000 + Math.random() * 900000);
+                document.getElementById('gcashRefCode').innerText = randomRef;
+                document.getElementById('gcashQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=GCASH-PAYMENT-REF-${randomRef}-TOTAL-${grandTotal.toFixed(2)}`;
+            } else if (method === 'Credit / Debit Card') {
+                sectionCard.classList.remove('hidden');
+                document.getElementById('modalAmountPaid').value = grandTotal.toFixed(2);
+                document.getElementById('modalChangeDue').innerText = '₱0.00';
+            }
         }
 
         function calculateChange() {
@@ -834,7 +911,12 @@
 
         async function processTransaction() {
             const { subtotal, discountAmount, taxAmount, grandTotal } = calculateCartTotals();
-            const amountPaid = parseFloat(document.getElementById('modalAmountPaid').value) || 0;
+            const method = document.getElementById('modalPaymentMethod').value;
+            let amountPaid = parseFloat(document.getElementById('modalAmountPaid').value) || 0;
+
+            if (method !== 'Cash') {
+                amountPaid = grandTotal;
+            }
 
             if (amountPaid < grandTotal) {
                 showNotification('Tendered amount is insufficient!', 'error');
@@ -852,7 +934,7 @@
                 discount_amount: discountAmount,
                 tax_amount: taxAmount,
                 total_amount: grandTotal,
-                payment_method: document.getElementById('modalPaymentMethod').value,
+                payment_method: method,
                 amount_paid: amountPaid,
                 change_given: amountPaid - grandTotal
             }]).select().single();
@@ -862,7 +944,6 @@
                 return;
             }
 
-            // Copy cart items snapshot for digital receipt
             const transactionItems = [...cart];
 
             // Save Sale Items & Update Stock
@@ -883,8 +964,7 @@
 
             closeCheckoutModal();
 
-            // Prepare Thermal Receipt Modal Data
-            lastCompletedTransaction = {
+            const transDetails = {
                 receiptNo,
                 dateTime: new Date().toLocaleString(),
                 cashier: currentUser ? currentUser.name : 'Cashier',
@@ -893,18 +973,17 @@
                 discountAmount,
                 taxAmount,
                 grandTotal,
-                paymentMethod: document.getElementById('modalPaymentMethod').value,
+                paymentMethod: method,
                 amountPaid,
                 change: amountPaid - grandTotal
             };
 
             clearCart();
-            showNotification(`Sale completed! Printing receipt...`, 'success');
+            showNotification(`Payment successful! Printing receipt...`, 'success');
             await fetchProducts();
             await fetchSalesHistory();
 
-            // Launch Thermal Receipt Flowing Animation
-            launchDigitalReceipt(lastCompletedTransaction);
+            launchDigitalReceipt(transDetails);
         }
 
         // DIGITAL RECEIPT FLOWING ANIMATION
@@ -931,10 +1010,9 @@
             document.getElementById('recTendered').innerText = `₱${trans.amountPaid.toFixed(2)}`;
             document.getElementById('recChange').innerText = `₱${trans.change.toFixed(2)}`;
 
-            // Reset paper animation
             const paper = document.getElementById('thermalPaper');
             paper.classList.remove('animate-feed-paper');
-            void paper.offsetWidth; // trigger reflow
+            void paper.offsetWidth;
             paper.classList.add('animate-feed-paper');
 
             document.getElementById('receiptModal').classList.remove('hidden');
