@@ -657,6 +657,7 @@
         let allPayroll = [];
         let auditLogs = [];
         let cart = [];
+        let allSales = [];
 
         // TOAST NOTIFICATIONS
         function showNotification(message, type = 'success') {
@@ -1235,39 +1236,50 @@
 
         // SALES & INCOME STATEMENT
         async function fetchSalesHistory() {
-            const { data } = await supabaseClient.from('sales').select('*').order('created_at', { ascending: false });
-            if (data) {
-                const totalSales = data.reduce((s, x) => s + parseFloat(x.total_amount), 0);
-                document.getElementById('dashTotalSales').innerText = `₱${totalSales.toFixed(2)}`;
-                document.getElementById('dashSalesCount').innerText = data.length;
+    const { data } = await supabaseClient.from('sales').select('*').order('created_at', { ascending: false });
+    if (data) {
+        allSales = data;
+        const totalSales = allSales.reduce((s, x) => s + parseFloat(x.total_amount), 0);
+        document.getElementById('dashTotalSales').innerText = `₱${totalSales.toFixed(2)}`;
+        document.getElementById('dashSalesCount').innerText = allSales.length;
 
-                document.getElementById('dashRecentSales').innerHTML = data.slice(0, 5).map(s => `
-                    <tr>
-                        <td class="p-3 font-mono font-bold text-emerald-600">${s.receipt_no}</td>
-                        <td class="p-3 text-slate-400">${new Date(s.created_at).toLocaleString()}</td>
-                        <td class="p-3 font-bold">${s.cashier_name}</td>
-                        <td class="p-3"><span class="bg-slate-100 px-2 py-0.5 rounded text-[10px]">${s.payment_method}</span></td>
-                        <td class="p-3 text-right font-mono font-bold">₱${parseFloat(s.total_amount).toFixed(2)}</td>
-                    </tr>
-                `).join('');
+        document.getElementById('dashRecentSales').innerHTML = allSales.slice(0, 5).map(s => `
+            <tr>
+                <td class="p-3 font-mono font-bold text-emerald-600">${s.receipt_no}</td>
+                <td class="p-3 text-slate-400">${new Date(s.created_at).toLocaleString()}</td>
+                <td class="p-3 font-bold">${s.cashier_name}</td>
+                <td class="p-3"><span class="bg-slate-100 px-2 py-0.5 rounded text-[10px]">${s.payment_method}</span></td>
+                <td class="p-3 text-right font-mono font-bold">₱${parseFloat(s.total_amount).toFixed(2)}</td>
+            </tr>
+        `).join('');
 
-                updateIncomeStatement(data);
-            }
-        }
+        updateIncomeStatement();
+    }
+}
 
-        function updateIncomeStatement(salesData = []) {
-            const totalRevenue = salesData.reduce((s, x) => s + parseFloat(x.total_amount), 0);
-            const totalCogs = totalRevenue * 0.60;
-            const grossMargin = totalRevenue - totalCogs;
-            const totalPayroll = allPayroll.reduce((s, x) => s + parseFloat(x.net_pay || x.netPay || 0), 0);
-            const netProfit = grossMargin - totalPayroll;
+// FETCH PAYROLL HISTORY
+async function fetchPayrollHistory() {
+    const { data, error } = await supabaseClient.from('payroll').select('*').order('date_recorded', { ascending: false });
+    if (!error && data) {
+        allPayroll = data;
+        renderPayrollTable();
+        updateIncomeStatement();
+    }
+}
 
-            document.getElementById('repRevenue').innerText = `₱${totalRevenue.toFixed(2)}`;
-            document.getElementById('repCogs').innerText = `-₱${totalCogs.toFixed(2)}`;
-            document.getElementById('repGrossIncome').innerText = `₱${grossMargin.toFixed(2)}`;
-            document.getElementById('repPayroll').innerText = `-₱${totalPayroll.toFixed(2)}`;
-            document.getElementById('repNetProfit').innerText = `₱${netProfit.toFixed(2)}`;
-        }
+        function updateIncomeStatement() {
+    const totalRevenue = allSales.reduce((s, x) => s + parseFloat(x.total_amount), 0);
+    const totalCogs = totalRevenue * 0.60;
+    const grossMargin = totalRevenue - totalCogs;
+    const totalPayroll = allPayroll.reduce((s, x) => s + parseFloat(x.net_pay || x.netPay || 0), 0);
+    const netProfit = grossMargin - totalPayroll;
+
+    document.getElementById('repRevenue').innerText = `₱${totalRevenue.toFixed(2)}`;
+    document.getElementById('repCogs').innerText = `-₱${totalCogs.toFixed(2)}`;
+    document.getElementById('repGrossIncome').innerText = `₱${grossMargin.toFixed(2)}`;
+    document.getElementById('repPayroll').innerText = `-₱${totalPayroll.toFixed(2)}`;
+    document.getElementById('repNetProfit').innerText = `₱${netProfit.toFixed(2)}`;
+}
 
         function updateDashboardStats() {
             const lowStockCount = allProducts.filter(p => p.stock_quantity <= 5).length;
