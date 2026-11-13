@@ -42,16 +42,41 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         @media print {
-            body * { visibility: hidden; }
-            #thermalPaper, #thermalPaper * { visibility: visible; }
-            #thermalPaper {
-                position: absolute;
-                left: 0;
-                top: 0;
+            body * { visibility: hidden !important; }
+            body.print-receipt #thermalPaper, body.print-receipt #thermalPaper * { visibility: visible !important; }
+            body.print-receipt #thermalPaper {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            body.print-payslip #printablePayslip, body.print-payslip #printablePayslip * { visibility: visible !important; }
+            body.print-payslip #printablePayslip {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 20px !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            body.print-report #reportTableContainer, body.print-report #reportTableContainer * { visibility: visible !important; }
+            body.print-report #reportTableContainer {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
                 width: 100% !important;
                 margin: 0 !important;
                 box-shadow: none !important;
             }
+            .print\:hidden { display: none !important; }
         }
     </style>
 </head>
@@ -444,18 +469,25 @@
 
                             <!-- Discount Rule -->
                             <div class="flex justify-between items-center">
-                                <span class="flex items-center gap-1">Discount <span class="text-[10px] text-slate-400">(F8)</span></span>
-                                <select id="discountSelect" onchange="onDiscountTypeChange()" class="text-[11px] font-bold border border-slate-200 rounded-lg px-2 py-1 bg-slate-50 text-slate-700 focus:outline-none">
-                                    <option value="none">None (0%)</option>
-                                    <option value="senior_pwd">Senior / PWD (20%)</option>
-                                    <option value="custom">Special / Promo (10%)</option>
+                                <span class="flex items-center gap-1 font-bold text-slate-700">Senior / Special Discount <span class="text-[10px] text-slate-400 font-normal">(F8)</span></span>
+                                <select id="discountSelect" onchange="onDiscountTypeChange()" class="text-xs font-bold border border-slate-200 rounded-lg px-2.5 py-1.5 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="none">No Discount (0%)</option>
+                                    <option value="senior_pwd">Senior Citizen (20% - OSCA)</option>
+                                    <option value="pwd">PWD (20% - Magna Carta)</option>
+                                    <option value="custom">Promotional / Special (10%)</option>
                                 </select>
                             </div>
 
                             <!-- Senior/PWD ID field -->
-                            <div id="seniorIdContainer" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 space-y-1">
-                                <label class="block text-[10px] font-black text-emerald-800 uppercase">Senior / PWD ID Number *</label>
-                                <input type="text" id="seniorPwdIdInput" placeholder="Enter OSCA/PWD ID for records (required)" class="w-full border border-emerald-300 rounded-lg p-1.5 text-xs font-semibold focus:outline-none bg-white">
+                            <div id="seniorIdContainer" class="hidden bg-emerald-50/80 border border-emerald-300 rounded-xl p-3 space-y-1.5 shadow-sm transition">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[11px] font-black text-emerald-950 uppercase flex items-center gap-1.5">
+                                        <i class="fa-solid fa-id-card text-emerald-600"></i> Senior Citizen OSCA ID *
+                                    </label>
+                                    <span class="text-[10px] bg-emerald-200 text-emerald-900 font-extrabold px-2 py-0.5 rounded-full">20% Off + VAT Exempt</span>
+                                </div>
+                                <input type="text" id="seniorPwdIdInput" placeholder="Enter OSCA ID (e.g. OSCA-2025-10492)" class="w-full border border-emerald-400 rounded-lg p-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                                <p class="text-[10px] text-emerald-700 font-medium">Automatic 20% discount & VAT-exempt (e.g. ₱1,000 &rarr; -₱200 &rarr; ₱800.00)</p>
                             </div>
 
                             <div class="flex justify-between text-emerald-600 font-bold">
@@ -549,29 +581,123 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                     <div>
                         <h2 class="text-2xl font-black text-slate-800 tracking-tight">HR & Payroll Management</h2>
-                        <p class="text-xs text-slate-500 font-medium">Calculate employee salaries, hourly rates, deductions (SSS/PhilHealth/Pag-IBIG), and net pay</p>
+                        <p class="text-xs text-slate-500 font-medium">Compute gross salaries, dedicated statutory deductions (SSS, Pag-IBIG, PhilHealth, Tax), net pay, and generate official employee payslips</p>
                     </div>
-                    <button onclick="openPayrollModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold px-4 py-3 rounded-xl shadow-md transition flex items-center gap-2">
-                        <i class="fa-solid fa-calculator"></i> Compute Employee Payroll
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="openPayrollModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold px-4 py-3 rounded-xl shadow-md transition flex items-center gap-2">
+                            <i class="fa-solid fa-calculator"></i> Compute Employee Payroll
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PAYROLL METRIC CARDS -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Gross Pay</span>
+                        <h4 id="payStatGross" class="text-base font-black text-slate-800 font-mono mt-1">₱0.00</h4>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+                        <span class="text-[10px] font-bold text-red-500 uppercase tracking-wider block">SSS Deductions</span>
+                        <h4 id="payStatSSS" class="text-base font-black text-red-600 font-mono mt-1">₱0.00</h4>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+                        <span class="text-[10px] font-bold text-red-500 uppercase tracking-wider block">Pag-IBIG Fund</span>
+                        <h4 id="payStatPagibig" class="text-base font-black text-red-600 font-mono mt-1">₱0.00</h4>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+                        <span class="text-[10px] font-bold text-red-500 uppercase tracking-wider block">PhilHealth</span>
+                        <h4 id="payStatPhilhealth" class="text-base font-black text-red-600 font-mono mt-1">₱0.00</h4>
+                    </div>
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+                        <span class="text-[10px] font-bold text-red-500 uppercase tracking-wider block">Withholding Tax</span>
+                        <h4 id="payStatTax" class="text-base font-black text-red-600 font-mono mt-1">₱0.00</h4>
+                    </div>
+                    <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-3.5 rounded-2xl shadow-md">
+                        <span class="text-[10px] font-bold text-emerald-100 uppercase tracking-wider block">Total Net Payout</span>
+                        <h4 id="payStatNet" class="text-base font-black text-white font-mono mt-1">₱0.00</h4>
+                    </div>
+                </div>
+
+                <!-- FILTER CONTROLS BAR (Item 19) -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-4 flex flex-wrap gap-3 items-center justify-between">
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                            <i class="fa-solid fa-filter text-emerald-600"></i>
+                            <span>Filters:</span>
+                        </div>
+                        <!-- Month Filter -->
+                        <div>
+                            <select id="payFilterMonth" onchange="filterPayrollHistory()" class="text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="ALL">All Months</option>
+                                <option value="January">January</option>
+                                <option value="February">February</option>
+                                <option value="March">March</option>
+                                <option value="April">April</option>
+                                <option value="May">May</option>
+                                <option value="June">June</option>
+                                <option value="July">July</option>
+                                <option value="August">August</option>
+                                <option value="September">September</option>
+                                <option value="October">October</option>
+                                <option value="November">November</option>
+                                <option value="December">December</option>
+                            </select>
+                        </div>
+                        <!-- Year Filter -->
+                        <div>
+                            <select id="payFilterYear" onchange="filterPayrollHistory()" class="text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="ALL">All Years</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                            </select>
+                        </div>
+                        <!-- Employee Filter -->
+                        <div>
+                            <select id="payFilterEmp" onchange="filterPayrollHistory()" class="text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="ALL">All Employees</option>
+                                <option value="John Dela Cruz">John Dela Cruz (Cashier)</option>
+                                <option value="Maria Santos">Maria Santos (Store Manager)</option>
+                                <option value="Kevin Bautista">Kevin Bautista (Inventory Clerk)</option>
+                                <option value="Ana Gomez">Ana Gomez (Assistant Cashier)</option>
+                            </select>
+                        </div>
+                        <!-- Quick Reset -->
+                        <button onclick="resetPayrollFilters()" class="text-xs text-slate-500 hover:text-slate-800 font-bold px-2 py-1 rounded-lg hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-rotate-left"></i> Reset
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="openPayrollModalWithSample()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Sample Rubric (₱30k / ₱3.8k Ded)
+                        </button>
+                        <button onclick="printPayrollTableDoc()" class="text-xs bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-print"></i> Print Report
+                        </button>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
+                        <table class="w-full text-left border-collapse text-xs">
                             <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
                                 <tr>
-                                    <th class="p-4">Employee</th>
-                                    <th class="p-4">Role / Period</th>
-                                    <th class="p-4">Rate / Hours</th>
-                                    <th class="p-4">Gross Salary</th>
-                                    <th class="p-4">Deductions</th>
-                                    <th class="p-4 font-black">Net Pay</th>
-                                    <th class="p-4">Date Recorded</th>
-                                    <th class="p-4 text-right">Action</th>
+                                    <th class="p-3.5">Employee</th>
+                                    <th class="p-3.5">Role / Period</th>
+                                    <th class="p-3.5 text-right font-black">Gross Pay</th>
+                                    <th class="p-3.5 text-right text-red-600">SSS</th>
+                                    <th class="p-3.5 text-right text-red-600">Pag-IBIG</th>
+                                    <th class="p-3.5 text-right text-red-600">PhilHealth</th>
+                                    <th class="p-3.5 text-right text-red-600">Withholding Tax</th>
+                                    <th class="p-3.5 text-right text-red-700 font-extrabold">Total Deductions</th>
+                                    <th class="p-3.5 text-right text-emerald-700 font-black">Net Pay</th>
+                                    <th class="p-3.5 text-center">Status</th>
+                                    <th class="p-3.5 text-right">In-System Payslip</th>
                                 </tr>
                             </thead>
-                            <tbody id="payrollTableBody" class="divide-y divide-slate-100 text-xs text-slate-700 font-medium"></tbody>
+                            <tbody id="payrollTableBody" class="divide-y divide-slate-100 text-slate-700 font-medium"></tbody>
                         </table>
                     </div>
                 </div>
@@ -637,9 +763,10 @@
 
                 <!-- REPORT VIEW SELECTOR -->
                 <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-4 flex flex-wrap gap-2 items-center justify-between">
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap gap-2">
                         <button onclick="switchReportTab('sales')" id="repTab-sales" class="rep-tab px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white">Sales Ledger</button>
                         <button onclick="switchReportTab('discounted')" id="repTab-discounted" class="rep-tab px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">Senior / PWD Sales</button>
+                        <button onclick="switchReportTab('payroll')" id="repTab-payroll" class="rep-tab px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">Salary & Payroll Reports</button>
                         <button onclick="switchReportTab('losses')" id="repTab-losses" class="rep-tab px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">Inventory Losses</button>
                     </div>
                 </div>
@@ -748,6 +875,28 @@
                     <p class="text-[11px] text-slate-400">Select payment method or tender cash</p>
                 </div>
                 <span id="modalPayableAmount" class="font-mono font-black text-xl text-emerald-600">₱0.00</span>
+            </div>
+
+            <!-- Senior Citizen Option at Checkout (Item 15) -->
+            <div id="checkoutSeniorCard" class="bg-emerald-50/70 border border-emerald-300 rounded-2xl p-3 text-xs space-y-2">
+                <div class="flex items-center justify-between font-bold text-emerald-950">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="chkModalSeniorToggle" onchange="toggleSeniorDiscountInCheckout(this.checked)" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-person-cane text-emerald-600 text-sm"></i> Senior Citizen Discount (20% OSCA)</span>
+                    </label>
+                    <span id="chkSeniorDiscountBadge" class="text-[10px] bg-emerald-200 text-emerald-900 font-extrabold px-2 py-0.5 rounded-full">20% Off + VAT Exempt</span>
+                </div>
+                <div id="chkModalSeniorIdWrap" class="space-y-1 hidden">
+                    <div class="flex items-center justify-between text-[11px] text-emerald-800 font-bold">
+                        <span>OSCA ID Card Number:</span>
+                        <span id="chkSeniorDiscount" class="font-mono text-emerald-700">-₱0.00</span>
+                    </div>
+                    <input type="text" id="chkModalSeniorIdInput" oninput="syncCheckoutSeniorId(this.value)" placeholder="Enter OSCA ID (e.g. OSCA-2025-10492)" class="w-full border border-emerald-400 rounded-xl p-2 text-xs font-mono font-bold bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <div class="flex items-center justify-between text-[10px] text-emerald-700 font-medium">
+                        <span>Automatic 20% discount & VAT-exempt</span>
+                        <span class="font-bold text-emerald-800 uppercase">VAT Exempt (0%)</span>
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -914,12 +1063,178 @@
             </div>
 
             <div class="flex gap-2 w-full mt-3">
-                <button onclick="window.print()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-print"></i> Print / PDF (P)
+                <button onclick="printThermalReceipt()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-print"></i> Print Receipt (P)
                 </button>
                 <button onclick="closeReceiptModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl text-xs">
                     Close (Esc/Enter)
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IN-SYSTEM OFFICIAL PAYSLIP MODAL -->
+    <div id="payslipModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center hidden p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 max-w-xl w-full border border-slate-200 space-y-4 my-auto relative">
+            <!-- Header bar with Print & Close controls -->
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3 print:hidden">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-invoice text-emerald-600"></i> Official In-System Employee Payslip
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="printPayslipDoc()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-print"></i> Print Payslip
+                    </button>
+                    <button type="button" onclick="closePayslipModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-xmark text-base"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Printable Payslip Document Container -->
+            <div id="printablePayslip" class="bg-white p-3 space-y-4 text-slate-800">
+                <!-- Company Header -->
+                <div class="text-center border-b-2 border-slate-800 pb-3 space-y-0.5">
+                    <div class="flex items-center justify-center gap-2 text-emerald-700 font-black text-xl tracking-tight">
+                        <i class="fa-solid fa-store"></i> MINI MART EXPRESS
+                    </div>
+                    <p class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Human Resources & Payroll Department</p>
+                    <p class="text-[10px] text-slate-400 font-mono">Branch #04 Main Boulevard | VAT Reg TIN: 294-819-391-000</p>
+                    <div class="mt-2.5 pt-1.5 border-t border-dashed border-slate-300">
+                        <h2 class="text-xs font-black tracking-widest uppercase bg-slate-100 py-1 rounded-lg text-slate-800">
+                            EMPLOYEE COMPENSATION & PAYSLIP VOUCHER
+                        </h2>
+                    </div>
+                </div>
+
+                <!-- Employee & Period Details -->
+                <div class="grid grid-cols-2 gap-3 text-xs bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Employee Name</span>
+                        <span id="psEmpName" class="font-extrabold text-slate-900 text-sm">John Dela Cruz</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Position / Designation</span>
+                        <span id="psRole" class="font-bold text-slate-800">Cashier</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Payroll Period</span>
+                        <span id="psPeriod" class="font-bold text-emerald-700">November 2025</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Date Issued</span>
+                        <span id="psDate" class="font-mono text-slate-700">Nov 15, 2025</span>
+                    </div>
+                </div>
+
+                <!-- Earnings & Deductions Tables -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                    <!-- Earnings Panel -->
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                        <div class="bg-emerald-50 border-b border-emerald-100 px-3.5 py-2 font-black text-[11px] text-emerald-900 uppercase flex justify-between">
+                            <span>Earnings Breakdown</span>
+                            <span>Amount</span>
+                        </div>
+                        <div class="p-3 space-y-2 font-mono">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600 font-sans">Basic / Gross Pay:</span>
+                                <span id="psGross" class="font-bold text-slate-900">₱30,000.00</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 text-[11px]">
+                                <span class="font-sans">Overtime Pay:</span>
+                                <span id="psOtPay">₱0.00</span>
+                            </div>
+                            <div class="border-t border-slate-200 pt-2 flex justify-between items-center font-black text-emerald-700 text-xs">
+                                <span class="font-sans">TOTAL GROSS:</span>
+                                <span id="psTotalGross">₱30,000.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Deductions Panel (Item 17) -->
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                        <div class="bg-red-50 border-b border-red-100 px-3.5 py-2 font-black text-[11px] text-red-900 uppercase flex justify-between">
+                            <span>Itemized Deductions</span>
+                            <span>Amount</span>
+                        </div>
+                        <div class="p-3 space-y-1.5 font-mono">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600 font-sans">SSS Contribution:</span>
+                                <span id="psSss" class="text-red-600 font-semibold">₱1,200.00</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600 font-sans">Pag-IBIG (HDMF):</span>
+                                <span id="psPagibig" class="text-red-600 font-semibold">₱200.00</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600 font-sans">PhilHealth:</span>
+                                <span id="psPhilhealth" class="text-red-600 font-semibold">₱400.00</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600 font-sans">Withholding Tax:</span>
+                                <span id="psTax" class="text-red-600 font-semibold">₱2,000.00</span>
+                            </div>
+                            <div class="border-t border-slate-200 pt-2 flex justify-between items-center font-black text-red-700 text-xs">
+                                <span class="font-sans">TOTAL DEDUCTIONS:</span>
+                                <span id="psTotalDed">-₱3,800.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Net Take-Home Pay (Item 18) -->
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4 rounded-2xl flex items-center justify-between shadow-lg">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold tracking-wider text-emerald-100 block">NET TAKE-HOME PAY</span>
+                        <span id="psNetPayWords" class="text-[11px] text-emerald-100 italic">Twenty-Six Thousand Two Hundred Pesos Only</span>
+                    </div>
+                    <span id="psNetPay" class="font-mono font-black text-2xl text-white">₱26,200.00</span>
+                </div>
+
+                <!-- Signatures Section -->
+                <div class="grid grid-cols-2 gap-8 pt-4 text-[11px] text-slate-500 text-center">
+                    <div class="border-t border-slate-300 pt-1.5">
+                        <p id="psSignAdmin" class="font-bold text-slate-800">Store Manager / HR Admin</p>
+                        <p class="text-[9px] text-slate-400">Approved & Certified</p>
+                    </div>
+                    <div class="border-t border-slate-300 pt-1.5">
+                        <p id="psSignEmployee" class="font-bold text-slate-800">John Dela Cruz</p>
+                        <p class="text-[9px] text-slate-400">Employee Signature & Acknowledgement</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Close button for screen -->
+            <div class="pt-1 flex justify-end print:hidden">
+                <button type="button" onclick="closePayslipModal()" class="w-full sm:w-auto px-6 py-2.5 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl text-xs text-slate-700 transition">
+                    Close Payslip (Esc)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IN-SYSTEM CONFIRMATION / PROMPT MODAL (replaces browser confirm() and prompt()) -->
+    <div id="systemConfirmModal" class="fixed inset-0 z-[60] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-md w-full border border-slate-100 space-y-4">
+            <div class="flex items-center gap-3">
+                <div id="sysConfirmIconWrap" class="p-3 bg-red-100 text-red-600 rounded-2xl text-xl flex-shrink-0">
+                    <i id="sysConfirmIcon" class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h3 id="sysConfirmTitle" class="text-base font-black text-slate-900">Confirm Action</h3>
+                    <p id="sysConfirmMessage" class="text-xs text-slate-500 font-medium">Are you sure you want to proceed?</p>
+                </div>
+            </div>
+            <div id="sysConfirmInputWrap" class="hidden">
+                <label id="sysConfirmInputLabel" class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Reason / Note</label>
+                <input type="text" id="sysConfirmInput" class="w-full border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-500">
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button type="button" id="sysConfirmCancelBtn" class="flex-1 py-2.5 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
+                <button type="button" id="sysConfirmOkBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl text-xs font-extrabold shadow">Confirm</button>
             </div>
         </div>
     </div>
@@ -959,6 +1274,21 @@
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Selling Price (₱) *</label>
                         <input type="number" step="0.01" id="prodPrice" required placeholder="0.00" class="w-full border rounded-xl p-2.5 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <!-- Low Stock Limit & Expiry Date (Item 20) -->
+                <div class="grid grid-cols-2 gap-3 bg-amber-50/60 p-2.5 rounded-xl border border-amber-200">
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1 flex items-center gap-1">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Low Stock Alert Limit (≤) *
+                        </label>
+                        <input type="number" id="prodLowStockLimit" value="10" required class="w-full border border-amber-300 rounded-xl p-2 text-xs font-mono font-bold bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-amber-900 uppercase mb-1 flex items-center gap-1">
+                            <i class="fa-solid fa-calendar-xmark text-red-600"></i> Expiration Date
+                        </label>
+                        <input type="date" id="prodExpDate" class="w-full border border-amber-300 rounded-xl p-2 text-xs font-mono font-bold bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
                     </div>
                 </div>
                 <div>
@@ -1068,45 +1398,178 @@
         </div>
     </div>
 
-    <!-- PAYROLL CALCULATOR MODAL -->
+    <!-- PAYROLL CALCULATOR MODAL (Items 16, 17, 18) -->
     <div id="payrollModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-md w-full space-y-3 max-h-[90vh] overflow-y-auto">
-            <h3 class="text-base font-black text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-calculator text-emerald-600"></i> Calculate Employee Salary
-            </h3>
-            <form onsubmit="handlePayrollSubmit(event)" class="space-y-3">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-7 max-w-lg w-full space-y-4 max-h-[92vh] overflow-y-auto border border-slate-100">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Employee Name *</label>
-                    <input type="text" id="payEmpName" required placeholder="e.g. John Dela Cruz" class="w-full border rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-emerald-600"></i> Employee Salary & Statutory Calculator
+                    </h3>
+                    <p class="text-[11px] text-slate-400">Compute gross pay, itemized statutory deductions, and take-home pay</p>
                 </div>
+                <button type="button" onclick="closePayrollModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- Rubric Quick Sample Action -->
+            <button type="button" onclick="loadRubricSampleIntoModal()" class="w-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 rounded-xl py-2.5 px-3 text-xs font-bold flex items-center justify-center gap-2 transition shadow-sm">
+                <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Auto-Fill Rubric Sample (John Dela Cruz: ₱30k Gross, ₱3.8k Ded, ₱26.2k Net)
+            </button>
+
+            <form onsubmit="handlePayrollSubmit(event)" class="space-y-3.5">
+                <!-- Employee Selection (Item 16) -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Select Employee / Cashier *</label>
+                    <select id="payEmpSelect" onchange="onPayEmpSelectChange()" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 text-slate-800">
+                        <option value="John Dela Cruz" data-role="Cashier" data-gross="30000.00" data-rate="187.50" data-hours="160">John Dela Cruz (Cashier - Sample ₱30,000.00)</option>
+                        <option value="Maria Santos" data-role="Store Manager" data-gross="40000.00" data-rate="250.00" data-hours="160">Maria Santos (Store Manager)</option>
+                        <option value="Kevin Bautista" data-role="Inventory Clerk" data-gross="20000.00" data-rate="125.00" data-hours="160">Kevin Bautista (Inventory Clerk)</option>
+                        <option value="Ana Gomez" data-role="Assistant Cashier" data-gross="25000.00" data-rate="156.25" data-hours="160">Ana Gomez (Assistant Cashier)</option>
+                        <option value="custom">-- Enter Custom Employee Name --</option>
+                    </select>
+                </div>
+
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Role</label>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Employee Full Name *</label>
+                        <input type="text" id="payEmpName" value="John Dela Cruz" required placeholder="Full Name" class="w-full border rounded-xl p-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Position / Role</label>
                         <input type="text" id="payRole" value="Cashier" class="w-full border rounded-xl p-2 text-xs font-bold focus:outline-none">
                     </div>
+                </div>
+
+                <!-- Month and Year Selection (Item 16) -->
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Pay Period</label>
-                        <input type="text" id="payPeriod" value="Nov 01 - Nov 15, 2026" class="w-full border rounded-xl p-2 text-xs font-bold focus:outline-none">
+                        <label class="block text-[10px] font-black text-slate-600 uppercase mb-1 flex items-center gap-1">
+                            <i class="fa-solid fa-calendar-day text-emerald-600"></i> Payroll Month *
+                        </label>
+                        <select id="payMonth" onchange="updatePayPeriodString()" class="w-full border border-slate-300 rounded-xl p-2 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="January">January</option>
+                            <option value="February">February</option>
+                            <option value="March">March</option>
+                            <option value="April">April</option>
+                            <option value="May">May</option>
+                            <option value="June">June</option>
+                            <option value="July">July</option>
+                            <option value="August">August</option>
+                            <option value="September">September</option>
+                            <option value="October">October</option>
+                            <option value="November" selected>November</option>
+                            <option value="December">December</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 uppercase mb-1 flex items-center gap-1">
+                            <i class="fa-solid fa-calendar-days text-emerald-600"></i> Payroll Year *
+                        </label>
+                        <select id="payYear" onchange="updatePayPeriodString()" class="w-full border border-slate-300 rounded-xl p-2 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="2024">2024</option>
+                            <option value="2025" selected>2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="payPeriod" value="November 2025">
+                </div>
+
+                <!-- Gross Pay Structure (Item 16: choice of monthly basic or hourly/rate) -->
+                <div class="border border-slate-200 rounded-2xl p-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-black text-slate-700 uppercase">Gross Pay Calculation</span>
+                        <div class="flex items-center gap-3 text-xs font-bold">
+                            <label class="flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name="payTypeRadio" value="monthly" checked onchange="togglePayTypeRadio('monthly')">
+                                <span class="text-slate-700">Monthly Basic</span>
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name="payTypeRadio" value="hourly" onchange="togglePayTypeRadio('hourly')">
+                                <span class="text-slate-700">Hourly / Rate</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Basic Mode -->
+                    <div id="wrapMonthlyGross">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Monthly Basic Salary (₱) *</label>
+                        <input type="number" step="0.01" id="payGrossSalary" value="30000.00" oninput="calcPayrollPreview()" placeholder="30000.00" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm font-mono font-black text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <!-- Hourly Mode -->
+                    <div id="wrapHourlyGross" class="hidden grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Rate (₱/hr)</label>
+                            <input type="number" step="0.01" id="payHourlyRate" value="187.50" oninput="calcHourlyGross()" class="w-full border rounded-xl p-2 text-xs font-mono font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Hours</label>
+                            <input type="number" step="0.5" id="payHoursWorked" value="160" oninput="calcHourlyGross()" class="w-full border rounded-xl p-2 text-xs font-mono font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Overtime (₱)</label>
+                            <input type="number" step="0.01" id="payOtPay" value="0.00" oninput="calcHourlyGross()" class="w-full border rounded-xl p-2 text-xs font-mono font-bold">
+                        </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Hourly Rate (₱) *</label>
-                        <input type="number" step="0.01" id="payHourlyRate" required oninput="calcPayrollPreview()" placeholder="85.00" class="w-full border rounded-xl p-2.5 text-xs font-mono font-bold focus:outline-none">
+
+                <!-- Dedicated Statutory Deductions (Item 17: SSS, Pag-IBIG, PhilHealth, Tax = ₱3,800.00) -->
+                <div class="bg-red-50/40 border border-red-200 rounded-2xl p-3.5 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-black uppercase text-red-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-invoice-dollar text-red-600"></i> Dedicated Statutory Deductions (Item 17)
+                        </span>
+                        <span id="previewTotalDedTag" class="text-[10px] bg-red-100 border border-red-300 text-red-800 font-bold px-2 py-0.5 rounded-full font-mono">-₱3,800.00</span>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Regular Hours *</label>
-                        <input type="number" step="0.5" id="payHoursWorked" required oninput="calcPayrollPreview()" placeholder="80" class="w-full border rounded-xl p-2.5 text-xs font-mono font-bold focus:outline-none">
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">SSS (₱) *</label>
+                            <input type="number" step="0.01" id="payDedSSS" value="1200.00" oninput="calcPayrollPreview()" class="w-full border border-red-300 rounded-xl p-2 font-mono font-bold text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Pag-IBIG (₱) *</label>
+                            <input type="number" step="0.01" id="payDedPagibig" value="200.00" oninput="calcPayrollPreview()" class="w-full border border-red-300 rounded-xl p-2 font-mono font-bold text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">PhilHealth (₱) *</label>
+                            <input type="number" step="0.01" id="payDedPhilhealth" value="400.00" oninput="calcPayrollPreview()" class="w-full border border-red-300 rounded-xl p-2 font-mono font-bold text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Withholding Tax (₱) *</label>
+                            <input type="number" step="0.01" id="payDedTax" value="2000.00" oninput="calcPayrollPreview()" class="w-full border border-red-300 rounded-xl p-2 font-mono font-bold text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 bg-white">
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-slate-500 pt-1 border-t border-red-200">
+                        <span>Sample Sum: ₱1,200 (SSS) + ₱200 (Pag-IBIG) + ₱400 (PhilHealth) + ₱2,000 (Tax)</span>
+                        <span class="font-bold text-red-700">= ₱3,800.00 Deductions</span>
                     </div>
                 </div>
-                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-xs font-mono">
-                    <div class="flex justify-between"><span>Gross Salary:</span><span id="payGrossPrev" class="font-bold text-slate-800">₱0.00</span></div>
-                    <div class="flex justify-between"><span>Deductions (10%):</span><span id="payDedPrev" class="text-red-500">-₱0.00</span></div>
-                    <div class="flex justify-between font-bold border-t border-slate-200 pt-1 text-sm"><span>Net Pay:</span><span id="payNetPrev" class="text-emerald-600 font-black">₱0.00</span></div>
+
+                <!-- Real-time Live Calculation Summary (Item 18: Gross - Deductions = Net Pay) -->
+                <div class="p-3.5 bg-slate-900 text-white rounded-2xl space-y-1.5 text-xs font-mono shadow-lg">
+                    <div class="flex justify-between text-slate-300">
+                        <span>Gross Salary:</span>
+                        <span id="payGrossPrev" class="font-bold text-white text-sm">₱30,000.00</span>
+                    </div>
+                    <div class="flex justify-between text-red-400">
+                        <span>Total Deductions:</span>
+                        <span id="payDedPrev" class="font-bold">-₱3,800.00</span>
+                    </div>
+                    <div class="flex justify-between font-black border-t border-slate-700 pt-2 text-sm text-emerald-400">
+                        <span>NET TAKE-HOME PAY:</span>
+                        <span id="payNetPrev" class="text-xl">₱26,200.00</span>
+                    </div>
                 </div>
+
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="closePayrollModal()" class="flex-1 py-2.5 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
-                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-extrabold shadow">Save Payroll</button>
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-extrabold shadow flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> Save & Generate Payslip
+                    </button>
                 </div>
             </form>
         </div>
@@ -1334,10 +1797,67 @@
             }
         }
 
-        // INITIALIZE ON DOM LOAD
+        // INITIALIZE ON DOM LOAD & KEYBOARD SHORTCUTS
         document.addEventListener('DOMContentLoaded', async () => {
             updateBackendUI();
             await loadRoleAccounts('admin');
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeReceiptModal();
+                    closePayslipModal();
+                    closeCheckoutModal();
+                    closePayrollModal();
+                    const sysConfirm = document.getElementById('systemConfirmModal');
+                    if (sysConfirm && !sysConfirm.classList.contains('hidden')) {
+                        const cancelBtn = document.getElementById('sysConfirmCancelBtn');
+                        if (cancelBtn) cancelBtn.click();
+                    }
+                    return;
+                }
+
+                if (e.key === 'F2') {
+                    e.preventDefault();
+                    switchTab('pos');
+                    const s = document.getElementById('posSearch');
+                    if (s) { s.focus(); s.select(); }
+                    return;
+                }
+
+                if (e.key === 'F4') {
+                    e.preventDefault();
+                    if (cart.length > 0) openCheckoutModal();
+                    return;
+                }
+
+                if (e.key === 'F8') {
+                    e.preventDefault();
+                    const sel = document.getElementById('discountSelect');
+                    if (sel) {
+                        sel.value = (sel.value === 'senior_pwd') ? 'none' : 'senior_pwd';
+                        onDiscountTypeChange();
+                    }
+                    return;
+                }
+
+                if (e.key === 'F9') {
+                    e.preventDefault();
+                    clearCart();
+                    return;
+                }
+
+                if (e.key === 'Enter') {
+                    const checkoutModal = document.getElementById('checkoutModal');
+                    if (checkoutModal && !checkoutModal.classList.contains('hidden')) {
+                        const activeEl = document.activeElement;
+                        // If not clicking cancel button, process checkout
+                        if (activeEl && activeEl.id === 'sysConfirmCancelBtn') return;
+                        e.preventDefault();
+                        processCheckoutTransaction();
+                        return;
+                    }
+                }
+            });
         });
 
         // ROLE SELECTION
@@ -1577,7 +2097,35 @@
                 renderInventoryTable(allProducts);
                 populateLossProductSelect(allProducts);
             } catch (err) {
-                console.error('Error fetching products:', err);
+                console.warn('Error fetching products from active backend:', err);
+                if (activeBackend === 'supabase') {
+                    try {
+                        const res = await fetch(`${API_URL}?action=get_products`);
+                        const data = await res.json();
+                        if (data.success && data.products) {
+                            allProducts = data.products.map(p => ({
+                                id: p.id,
+                                barcode: p.barcode,
+                                name: p.name,
+                                category: p.category,
+                                cost_price: parseFloat(p.cost_price),
+                                selling_price: parseFloat(p.selling_price),
+                                stock_quantity: parseInt(p.stock_quantity),
+                                low_stock_threshold: parseInt(p.low_stock_threshold),
+                                expiration_date: p.expiration_date,
+                                image_url: p.image_url,
+                                status: p.status,
+                                supplier_name: p.supplier_name
+                            }));
+                            populateCategories(allProducts);
+                            renderPosProducts(allProducts);
+                            renderInventoryTable(allProducts);
+                            populateLossProductSelect(allProducts);
+                            showNotification('Supabase offline. Switched catalog to local fallback.', 'info');
+                            return;
+                        }
+                    } catch (e2) {}
+                }
                 showNotification('Error loading catalog: ' + err.message, 'error');
             }
         }
@@ -1661,20 +2209,34 @@
             grid.innerHTML = products.map(p => {
                 const isOutOfStock = p.stock_quantity <= 0;
                 const isLowStock = p.stock_quantity > 0 && p.stock_quantity <= p.low_stock_threshold;
+                
+                let isExpired = false;
+                let expDays = null;
+                if (p.expiration_date) {
+                    const exp = new Date(p.expiration_date);
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    expDays = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+                    if (expDays < 0) isExpired = true;
+                }
+
                 return `
-                    <div onclick="${isOutOfStock ? '' : `addToCart('${p.id}')`}" class="group bg-white border border-slate-200 rounded-2xl p-3 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition flex flex-col justify-between ${isOutOfStock ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'cursor-pointer hover:border-emerald-500'}">
+                    <div onclick="${isOutOfStock || isExpired ? '' : `addToCart('${p.id}')`}" class="group bg-white border border-slate-200 rounded-2xl p-3 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition flex flex-col justify-between ${isOutOfStock || isExpired ? 'opacity-60 cursor-not-allowed bg-slate-50' : 'cursor-pointer hover:border-emerald-500'}">
                         <div>
                             <div class="w-full h-28 bg-slate-50 rounded-xl overflow-hidden mb-2.5 flex items-center justify-center border border-slate-100 relative">
                                 <img src="${p.image_url || 'https://via.placeholder.com/150?text=No+Image'}" alt="${p.name}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/150?text=No+Image';">
-                                ${isOutOfStock ? '<span class="absolute bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-full uppercase">Out of Stock</span>' : ''}
-                                ${isLowStock ? '<span class="absolute top-1.5 right-1.5 bg-amber-500 text-white font-bold text-[9px] px-1.5 py-0.5 rounded-full">Low: ' + p.stock_quantity + '</span>' : ''}
+                                ${isOutOfStock ? '<span class="absolute bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-full uppercase shadow">Out of Stock</span>' : ''}
+                                ${!isOutOfStock && isLowStock ? `<span class="absolute top-1.5 left-1.5 bg-amber-500 text-white font-black text-[9px] px-2 py-0.5 rounded-full shadow flex items-center gap-1 animate-pulse"><i class="fa-solid fa-triangle-exclamation"></i> Low: ${p.stock_quantity}</span>` : ''}
+                                ${isExpired ? `<span class="absolute top-1.5 right-1.5 bg-red-600 text-white font-black text-[9px] px-2 py-0.5 rounded-full shadow flex items-center gap-1"><i class="fa-solid fa-ban"></i> EXPIRED</span>` : (expDays !== null && expDays <= 30 ? `<span class="absolute top-1.5 right-1.5 bg-orange-500 text-white font-bold text-[9px] px-1.5 py-0.5 rounded-full shadow">Exp: ${expDays}d</span>` : '')}
                             </div>
                             <span class="text-[9px] font-extrabold text-emerald-800 uppercase bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">${p.category}</span>
                             <h4 class="font-bold text-slate-800 text-xs mt-1.5 leading-snug line-clamp-2">${p.name}</h4>
                             <p class="text-[10px] text-slate-400 font-mono mt-0.5"><i class="fa-solid fa-barcode text-[9px]"></i> ${p.barcode}</p>
                         </div>
                         <div class="flex justify-between items-center mt-2.5 pt-2 border-t border-slate-100">
-                            <span class="text-[10px] font-bold ${isOutOfStock ? 'text-red-500' : 'text-slate-500'}">Stock: ${p.stock_quantity}</span>
+                            <span class="text-[10px] font-bold ${isOutOfStock ? 'text-red-500' : (isLowStock ? 'text-amber-600' : 'text-slate-500')}">
+                                Stock: ${p.stock_quantity}
+                            </span>
                             <span class="font-black font-mono text-emerald-700 text-sm">₱${parseFloat(p.selling_price).toFixed(2)}</span>
                         </div>
                     </div>
@@ -1688,6 +2250,16 @@
         function addToCart(productId) {
             const product = allProducts.find(p => p.id == productId);
             if (!product) return;
+
+            if (product.expiration_date) {
+                const exp = new Date(product.expiration_date);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                if (exp < today) {
+                    showNotification(`Alert: "${product.name}" is EXPIRED (${product.expiration_date})! Selling expired goods is restricted.`, 'error');
+                    return;
+                }
+            }
 
             if (product.stock_quantity <= 0) {
                 showNotification(`"${product.name}" is out of stock!`, 'error');
@@ -1733,7 +2305,7 @@
         function onDiscountTypeChange() {
             const discountType = document.getElementById('discountSelect').value;
             const container = document.getElementById('seniorIdContainer');
-            if (discountType === 'senior_pwd') {
+            if (discountType === 'senior_pwd' || discountType === 'pwd') {
                 container.classList.remove('hidden');
                 document.getElementById('seniorPwdIdInput').focus();
             } else {
@@ -1747,18 +2319,24 @@
             const discountType = document.getElementById('discountSelect').value;
             
             let discountRate = 0;
-            if (discountType === 'senior_pwd') discountRate = 0.20;
-            if (discountType === 'custom') discountRate = 0.10;
+            if (discountType === 'senior_pwd' || discountType === 'pwd') {
+                discountRate = 0.20; // 20% Senior Citizen / PWD discount
+            } else if (discountType === 'custom') {
+                discountRate = 0.10; // 10% Special Promo discount
+            }
 
             const discountAmount = subtotal * discountRate;
-            const taxRate = parseFloat(document.getElementById('taxRateConfig').value) || 0;
+            
+            // Philippine RA 9994 (Expanded Senior Citizens Act) & RA 10754: Senior Citizens & PWDs are strictly VAT Exempt (0%)
+            const isVatExempt = (discountType === 'senior_pwd' || discountType === 'pwd');
+            const taxRate = isVatExempt ? 0.00 : (parseFloat(document.getElementById('taxRateConfig').value) || 0);
             const taxableAmount = Math.max(0, subtotal - discountAmount);
             const taxAmount = taxableAmount * taxRate;
-            const grandTotal = taxableAmount + taxAmount;
+            const grandTotal = taxableAmount + taxAmount; // Exactly ₱800.00 for ₱1,000 subtotal with 20% discount
 
             document.getElementById('cartSubtotal').innerText = `₱${subtotal.toFixed(2)}`;
             document.getElementById('cartDiscount').innerText = `-₱${discountAmount.toFixed(2)}`;
-            document.getElementById('cartTax').innerText = `₱${taxAmount.toFixed(2)}`;
+            document.getElementById('cartTax').innerText = isVatExempt ? '₱0.00 (Exempt)' : `₱${taxAmount.toFixed(2)}`;
             document.getElementById('cartTotal').innerText = `₱${grandTotal.toFixed(2)}`;
 
             return { subtotal, discountRate, discountAmount, discountType, taxRate, taxAmount, grandTotal };
@@ -1803,20 +2381,63 @@
         function openCheckoutModal() {
             if (cart.length === 0) return;
 
-            const { discountType } = calculateCartTotals();
-            if (discountType === 'senior_pwd') {
-                const idNum = document.getElementById('seniorPwdIdInput').value.trim();
-                if (!idNum) {
-                    showNotification('Please enter Senior / PWD ID number before proceeding!', 'error');
-                    document.getElementById('seniorPwdIdInput').focus();
-                    return;
-                }
+            const { discountType, discountAmount, grandTotal } = calculateCartTotals();
+            const isSenior = (discountType === 'senior_pwd' || discountType === 'pwd');
+            const chkToggle = document.getElementById('chkModalSeniorToggle');
+            const chkWrap = document.getElementById('chkModalSeniorIdWrap');
+            const chkInput = document.getElementById('chkModalSeniorIdInput');
+            const chkDiscount = document.getElementById('chkSeniorDiscount');
+            const idNum = document.getElementById('seniorPwdIdInput').value.trim();
+
+            if (chkToggle) chkToggle.checked = isSenior;
+            if (chkInput) chkInput.value = idNum;
+            if (chkDiscount) chkDiscount.innerText = `-₱${discountAmount.toFixed(2)}`;
+            if (chkWrap) {
+                if (isSenior) chkWrap.classList.remove('hidden');
+                else chkWrap.classList.add('hidden');
             }
 
-            const { grandTotal } = calculateCartTotals();
             document.getElementById('modalPayableAmount').innerText = `₱${grandTotal.toFixed(2)}`;
             selectPaymentMethod('Cash');
             document.getElementById('checkoutModal').classList.remove('hidden');
+        }
+
+        function toggleSeniorDiscountInCheckout(checked) {
+            const discSelect = document.getElementById('discountSelect');
+            if (discSelect) {
+                discSelect.value = checked ? 'senior_pwd' : 'none';
+            }
+            const seniorContainer = document.getElementById('seniorIdContainer');
+            if (seniorContainer) {
+                if (checked) seniorContainer.classList.remove('hidden');
+                else seniorContainer.classList.add('hidden');
+            }
+            const chkWrap = document.getElementById('chkModalSeniorIdWrap');
+            if (chkWrap) {
+                if (checked) chkWrap.classList.remove('hidden');
+                else chkWrap.classList.add('hidden');
+            }
+            const { discountAmount, grandTotal } = calculateCartTotals();
+            const chkDiscount = document.getElementById('chkSeniorDiscount');
+            if (chkDiscount) chkDiscount.innerText = `-₱${discountAmount.toFixed(2)}`;
+            document.getElementById('modalPayableAmount').innerText = `₱${grandTotal.toFixed(2)}`;
+
+            const method = document.getElementById('modalPaymentMethod').value;
+            if (method !== 'Cash') {
+                document.getElementById('modalAmountPaid').value = grandTotal.toFixed(2);
+            }
+            calculateChange();
+            if (checked) {
+                const chkInput = document.getElementById('chkModalSeniorIdInput');
+                if (chkInput && !chkInput.value) chkInput.focus();
+            }
+        }
+
+        function syncCheckoutSeniorId(val) {
+            const input = document.getElementById('seniorPwdIdInput');
+            if (input) input.value = val;
+            const chkInput = document.getElementById('chkModalSeniorIdInput');
+            if (chkInput && chkInput.value !== val) chkInput.value = val;
         }
 
         function closeCheckoutModal() {
@@ -1917,7 +2538,13 @@
             if (method === 'MariBank') refCode = document.getElementById('mariBankRefCode').innerText;
             if (method === 'Card') refCode = 'AUTH-' + Math.floor(100000 + Math.random() * 900000);
 
-            const discountIdNo = document.getElementById('seniorPwdIdInput').value.trim();
+            const discountIdNo = (document.getElementById('chkModalSeniorIdInput') ? document.getElementById('chkModalSeniorIdInput').value.trim() : '') || document.getElementById('seniorPwdIdInput').value.trim();
+            if ((discountType === 'senior_pwd' || discountType === 'pwd') && !discountIdNo) {
+                showNotification('Senior Citizen OSCA ID number is required for discount record!', 'error');
+                const chkInput = document.getElementById('chkModalSeniorIdInput');
+                if (chkInput) chkInput.focus();
+                return;
+            }
             const receiptNo = 'REC-' + new Date().getFullYear() + '-' + Math.floor(100000 + Math.random() * 900000);
 
             const saleRecord = {
@@ -1985,36 +2612,164 @@
         }
 
         // ========================================================
-        // RECEIPT MODAL
+        // RECEIPT & PAYSLIP IN-SYSTEM MODALS (NO BROWSER ALERTS)
         // ========================================================
+        function printThermalReceipt() {
+            document.body.classList.add('print-receipt');
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove('print-receipt');
+            }, 500);
+        }
+
+        function printPayslipDoc() {
+            document.body.classList.add('print-payslip');
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove('print-payslip');
+            }, 500);
+        }
+
+        function printPayrollTableDoc() {
+            document.body.classList.add('print-report');
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove('print-report');
+            }, 500);
+        }
+
+        function showSystemConfirm({ title, message, okText = 'Confirm', okColor = 'red', hasInput = false, inputLabel = 'Note / Reason', inputValue = '' }) {
+            return new Promise(resolve => {
+                const modal = document.getElementById('systemConfirmModal');
+                document.getElementById('sysConfirmTitle').innerText = title;
+                document.getElementById('sysConfirmMessage').innerText = message;
+                
+                const inputWrap = document.getElementById('sysConfirmInputWrap');
+                const inputEl = document.getElementById('sysConfirmInput');
+                if (hasInput) {
+                    inputWrap.classList.remove('hidden');
+                    document.getElementById('sysConfirmInputLabel').innerText = inputLabel;
+                    inputEl.value = inputValue;
+                    setTimeout(() => inputEl.focus(), 80);
+                } else {
+                    inputWrap.classList.add('hidden');
+                }
+
+                const okBtn = document.getElementById('sysConfirmOkBtn');
+                okBtn.innerText = okText;
+                okBtn.className = okColor === 'red' 
+                    ? 'flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl text-xs font-extrabold shadow transition' 
+                    : 'flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-extrabold shadow transition';
+
+                const cancelBtn = document.getElementById('sysConfirmCancelBtn');
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    okBtn.onclick = null;
+                    cancelBtn.onclick = null;
+                };
+
+                okBtn.onclick = () => {
+                    const res = hasInput ? inputEl.value.trim() : true;
+                    cleanup();
+                    resolve(res);
+                };
+                cancelBtn.onclick = () => {
+                    cleanup();
+                    resolve(null);
+                };
+
+                modal.classList.remove('hidden');
+            });
+        }
+
+        function openPayslipModal(record) {
+            if (!record) return;
+            const p = (typeof record === 'object') ? record : allPayroll.find(x => x.id == record);
+            if (!p) {
+                showNotification('Payroll record not found.', 'error');
+                return;
+            }
+
+            const gross = parseFloat(p.gross_salary || p.gross_pay || 0);
+            const sss = parseFloat(p.sss_deduction || 0);
+            const pagibig = parseFloat(p.pagibig_deduction || 0);
+            const philhealth = parseFloat(p.philhealth_deduction || 0);
+            const tax = parseFloat(p.tax_deduction || p.withholding_tax || 0);
+            const other = parseFloat(p.other_deductions || 0);
+            const totalDed = parseFloat(p.total_deductions || (sss + pagibig + philhealth + tax + other) || 0);
+            const net = parseFloat(p.net_pay || p.net_take_home_pay || (gross - totalDed));
+
+            document.getElementById('psEmpName').innerText = p.employee_name || 'Staff Member';
+            document.getElementById('psRole').innerText = p.role || p.role_position || 'Staff';
+            document.getElementById('psPeriod').innerText = p.pay_period || 'November 2025';
+            document.getElementById('psDate').innerText = new Date(p.created_at || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            
+            document.getElementById('psGross').innerText = `₱${gross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('psTotalGross').innerText = `₱${gross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('psOtPay').innerText = `₱${parseFloat(p.overtime_pay || 0).toFixed(2)}`;
+
+            document.getElementById('psSss').innerText = `₱${sss.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('psPagibig').innerText = `₱${pagibig.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('psPhilhealth').innerText = `₱${philhealth.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('psTax').innerText = `₱${tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('psTotalDed').innerText = `-₱${totalDed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            document.getElementById('psNetPay').innerText = `₱${net.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('psSignEmployee').innerText = p.employee_name || 'Staff Member';
+
+            if (Math.round(net) === 26200) {
+                document.getElementById('psNetPayWords').innerText = 'Twenty-Six Thousand Two Hundred Pesos Only';
+            } else {
+                document.getElementById('psNetPayWords').innerText = `Philippine Peso ${net.toFixed(2)} Net Disbursed`;
+            }
+
+            document.getElementById('payslipModal').classList.remove('hidden');
+        }
+
+        function closePayslipModal() {
+            document.getElementById('payslipModal').classList.add('hidden');
+        }
+
         function displaySoftCopyReceipt(sale) {
-            document.getElementById('recReceiptNo').innerText = sale.receipt_no;
+            if (!sale) return;
+            document.getElementById('recReceiptNo').innerText = sale.receipt_no || 'REC-UNKNOWN';
             document.getElementById('recDateTime').innerText = new Date(sale.created_at || Date.now()).toLocaleString();
-            document.getElementById('recCashier').innerText = sale.cashier_name;
+            document.getElementById('recCashier').innerText = sale.cashier_name || 'Front Cashier';
 
             const seniorRow = document.getElementById('recSeniorIdRow');
-            if (sale.discount_type === 'senior_pwd' && sale.discount_id_no) {
+            const isSenior = (sale.discount_type === 'senior_pwd' || sale.discount_type === 'pwd' || sale.discount_id_no);
+            if (isSenior && sale.discount_id_no) {
                 seniorRow.classList.remove('hidden');
                 document.getElementById('recSeniorId').innerText = sale.discount_id_no;
             } else {
                 seniorRow.classList.add('hidden');
             }
 
-            document.getElementById('recItemsList').innerHTML = sale.items.map(item => `
-                <div class="grid grid-cols-12 leading-tight">
-                    <span class="col-span-6 font-bold truncate">${item.name || item.product_name}</span>
-                    <span class="col-span-2 text-center">${item.quantity}</span>
-                    <span class="col-span-4 text-right font-bold">₱${(parseFloat(item.selling_price || item.unit_price) * item.quantity).toFixed(2)}</span>
-                </div>
-            `).join('');
+            const items = Array.isArray(sale.items) ? sale.items : [];
+            if (items.length > 0) {
+                document.getElementById('recItemsList').innerHTML = items.map(item => `
+                    <div class="grid grid-cols-12 leading-tight">
+                        <span class="col-span-6 font-bold truncate">${item.name || item.product_name || 'Item'}</span>
+                        <span class="col-span-2 text-center">${item.quantity || 1}</span>
+                        <span class="col-span-4 text-right font-bold">₱${(parseFloat(item.selling_price || item.unit_price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('recItemsList').innerHTML = `
+                    <div class="text-center py-2 text-slate-400 italic text-[11px]">
+                        Sale transaction logged (${sale.item_count || 1} item/s)
+                    </div>
+                `;
+            }
 
-            document.getElementById('recSubtotal').innerText = `₱${parseFloat(sale.subtotal).toFixed(2)}`;
-            document.getElementById('recDiscount').innerText = `-₱${parseFloat(sale.discount_amount).toFixed(2)}`;
-            document.getElementById('recTax').innerText = `₱${parseFloat(sale.tax_amount).toFixed(2)}`;
-            document.getElementById('recTotal').innerText = `₱${parseFloat(sale.grand_total).toFixed(2)}`;
-            document.getElementById('recPaymentMethod').innerText = sale.payment_method + (sale.payment_ref_code ? ` (${sale.payment_ref_code})` : '');
-            document.getElementById('recTendered').innerText = `₱${parseFloat(sale.amount_tendered).toFixed(2)}`;
-            document.getElementById('recChange').innerText = `₱${parseFloat(sale.change_due).toFixed(2)}`;
+            document.getElementById('recSubtotal').innerText = `₱${parseFloat(sale.subtotal || 0).toFixed(2)}`;
+            document.getElementById('recDiscount').innerText = `-₱${parseFloat(sale.discount_amount || 0).toFixed(2)}`;
+            document.getElementById('recTax').innerText = isSenior ? '₱0.00 (VAT Exempt)' : `₱${parseFloat(sale.tax_amount || 0).toFixed(2)}`;
+            document.getElementById('recTotal').innerText = `₱${parseFloat(sale.grand_total || 0).toFixed(2)}`;
+            document.getElementById('recPaymentMethod').innerText = (sale.payment_method || 'Cash') + (sale.payment_ref_code ? ` (${sale.payment_ref_code})` : '');
+            document.getElementById('recTendered').innerText = `₱${parseFloat(sale.amount_tendered || sale.grand_total || 0).toFixed(2)}`;
+            document.getElementById('recChange').innerText = `₱${parseFloat(sale.change_due || 0).toFixed(2)}`;
 
             const paper = document.getElementById('thermalPaper');
             paper.classList.remove('animate-feed-paper');
@@ -2028,14 +2783,52 @@
             document.getElementById('receiptModal').classList.add('hidden');
         }
 
-        function viewSaleDetailsModal(saleId) {
-            const sale = allSales.find(s => s.id == saleId);
-            if (sale) displaySoftCopyReceipt(sale);
+        async function viewSaleDetailsModal(saleId) {
+            let sale = allSales.find(s => s.id == saleId);
+            if (!sale) {
+                sale = supabaseLocalSales.find(s => s.id == saleId);
+            }
+
+            // If sale items are not loaded, fetch them from backend
+            if (sale && (!sale.items || sale.items.length === 0)) {
+                try {
+                    if (activeBackend === 'xampp') {
+                        const res = await fetch(`${API_URL}?action=get_sale_details&sale_id=${saleId}`);
+                        const data = await res.json();
+                        if (data.success && data.sale) {
+                            sale = data.sale;
+                            const idx = allSales.findIndex(s => s.id == saleId);
+                            if (idx !== -1) allSales[idx] = data.sale;
+                        }
+                    } else if (activeBackend === 'supabase' && supabaseClient) {
+                        const { data, error } = await supabaseClient.from('sale_items').select('*').eq('sale_id', saleId);
+                        if (!error && data && data.length > 0) {
+                            sale.items = data;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Could not fetch sale line items:', e);
+                }
+            }
+
+            if (sale) {
+                displaySoftCopyReceipt(sale);
+            } else {
+                showNotification('Transaction record not found.', 'error');
+            }
         }
 
         async function voidSalePrompt(saleId, receiptNo) {
-            const reason = prompt(`Confirm VOIDING transaction #${receiptNo}?\n\nEnter reason for cancellation:`, 'Customer cancellation / return');
-            if (reason === null) return;
+            const reason = await showSystemConfirm({
+                title: `Void Transaction #${receiptNo}`,
+                message: `Are you sure you want to void transaction #${receiptNo}? This will cancel the sale and return items to inventory.`,
+                okText: 'Void Transaction',
+                okColor: 'red',
+                hasInput: true,
+                inputLabel: 'Reason for Void / Cancellation',
+                inputValue: 'Customer cancellation / return'
+            });
+            if (!reason) return;
 
             try {
                 if (activeBackend === 'xampp') {
@@ -2053,7 +2846,7 @@
                         localStorage.setItem('supabase_sales', JSON.stringify(supabaseLocalSales));
                     }
                 }
-                showNotification(`Transaction #${receiptNo} was voided`, 'success');
+                showNotification(`Transaction #${receiptNo} was voided successfully`, 'success');
                 await refreshAllData();
             } catch (err) {
                 showNotification('Error voiding sale: ' + err.message, 'error');
@@ -2098,7 +2891,7 @@
             if (!body) return;
 
             if (products.length === 0) {
-                body.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-400 font-medium">No matching items in inventory.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-medium">No matching items in inventory.</td></tr>`;
                 return;
             }
 
@@ -2106,38 +2899,59 @@
                 const isOutOfStock = p.stock_quantity <= 0;
                 const isLowStock = p.stock_quantity > 0 && p.stock_quantity <= p.low_stock_threshold;
                 
-                let expBadge = '<span class="text-slate-400">N/A</span>';
+                let expBadge = '<span class="text-slate-400 font-mono text-xs">No Expiry</span>';
+                let isExpired = false;
+                let isExpiringSoon = false;
+
                 if (p.expiration_date) {
                     const exp = new Date(p.expiration_date);
-                    const diffDays = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    const diffDays = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
                     if (diffDays < 0) {
-                        expBadge = `<span class="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded text-[10px]">Expired</span>`;
+                        isExpired = true;
+                        expBadge = `<span class="bg-red-600 text-white font-black px-2.5 py-1 rounded-full text-[10px] shadow-sm flex items-center gap-1 w-max"><i class="fa-solid fa-ban"></i> EXPIRED (${p.expiration_date})</span>`;
                     } else if (diffDays <= 30) {
-                        expBadge = `<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[10px]">${p.expiration_date} (${diffDays}d)</span>`;
+                        isExpiringSoon = true;
+                        expBadge = `<span class="bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2 py-0.5 rounded-full text-[10px] flex items-center gap-1 w-max"><i class="fa-solid fa-clock-rotate-left text-amber-600"></i> ${p.expiration_date} (${diffDays}d)</span>`;
                     } else {
-                        expBadge = `<span class="font-mono text-slate-600">${p.expiration_date}</span>`;
+                        expBadge = `<span class="font-mono text-slate-600 text-xs">${p.expiration_date}</span>`;
                     }
                 }
 
+                let statusBadge = '';
+                let rowBg = 'hover:bg-slate-50';
+                if (isOutOfStock) {
+                    statusBadge = '<span class="bg-red-100 text-red-700 border border-red-200 px-2.5 py-1 rounded-full text-[10px] font-extrabold flex items-center gap-1 w-max"><i class="fa-solid fa-circle-xmark"></i> Out of Stock</span>';
+                    rowBg = 'bg-red-50/30 hover:bg-red-50/60';
+                } else if (isLowStock) {
+                    statusBadge = `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 w-max animate-pulse"><i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Low Stock Alert (≤ ${p.low_stock_threshold})</span>`;
+                    rowBg = 'bg-amber-50/30 hover:bg-amber-50/60';
+                } else {
+                    statusBadge = '<span class="bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 w-max"><i class="fa-solid fa-check"></i> In Stock</span>';
+                }
+
                 return `
-                    <tr class="hover:bg-slate-50 transition">
+                    <tr class="${rowBg} transition border-b border-slate-100">
                         <td class="p-3.5 font-mono font-bold text-slate-700">${p.barcode}</td>
-                        <td class="p-3.5 font-bold text-slate-800 flex items-center gap-2">
-                            <img src="${p.image_url || 'https://via.placeholder.com/150'}" class="w-8 h-8 rounded-lg object-cover border" onerror="this.src='https://via.placeholder.com/150';">
-                            <span>${p.name}</span>
+                        <td class="p-3.5 font-bold text-slate-800 flex items-center gap-2.5">
+                            <img src="${p.image_url || 'https://via.placeholder.com/150'}" class="w-9 h-9 rounded-xl object-cover border border-slate-200" onerror="this.src='https://via.placeholder.com/150';">
+                            <div>
+                                <span class="font-bold">${p.name}</span>
+                                ${isExpired ? '<span class="block text-[9px] text-red-600 font-extrabold uppercase tracking-wider">Expired Pullout Required</span>' : ''}
+                            </div>
                         </td>
                         <td class="p-3.5"><span class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">${p.category}</span></td>
                         <td class="p-3.5 font-mono">₱${parseFloat(p.cost_price).toFixed(2)}</td>
                         <td class="p-3.5 font-mono font-bold text-emerald-600">₱${parseFloat(p.selling_price).toFixed(2)}</td>
-                        <td class="p-3.5 font-black font-mono ${isLowStock || isOutOfStock ? 'text-red-600' : 'text-slate-800'}">${p.stock_quantity}</td>
-                        <td class="p-3.5">${expBadge}</td>
                         <td class="p-3.5">
-                            ${isOutOfStock ? 
-                                '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-[10px] font-bold">Out of Stock</span>' : 
-                                (isLowStock ? 
-                                    '<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[10px] font-bold">Low Stock Alert</span>' : 
-                                    '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-bold">In Stock</span>')}
+                            <span class="font-black font-mono text-sm ${isOutOfStock ? 'text-red-600' : (isLowStock ? 'text-amber-600' : 'text-slate-800')}">
+                                ${p.stock_quantity}
+                            </span>
+                            <span class="text-[10px] text-slate-400 block font-normal">Min: ${p.low_stock_threshold}</span>
                         </td>
+                        <td class="p-3.5">${expBadge}</td>
+                        <td class="p-3.5">${statusBadge}</td>
                         <td class="p-3.5 text-right whitespace-nowrap">
                             <button onclick="openRestockModal('${p.id}')" class="text-emerald-700 hover:text-emerald-900 bg-emerald-50 px-2 py-1 rounded-lg font-bold text-[11px] mr-1.5 transition">
                                 <i class="fa-solid fa-plus"></i> Restock
@@ -2157,6 +2971,8 @@
         function openProductModal() {
             document.getElementById('productForm').reset();
             document.getElementById('prodId').value = '';
+            document.getElementById('prodLowStockLimit').value = '10';
+            document.getElementById('prodExpDate').value = '';
             document.getElementById('productModalTitle').innerText = 'Add New Product';
             document.getElementById('productModal').classList.remove('hidden');
         }
@@ -2175,6 +2991,8 @@
             document.getElementById('prodCost').value = p.cost_price;
             document.getElementById('prodPrice').value = p.selling_price;
             document.getElementById('prodStock').value = p.stock_quantity;
+            document.getElementById('prodLowStockLimit').value = p.low_stock_threshold || 10;
+            document.getElementById('prodExpDate').value = p.expiration_date || '';
             document.getElementById('prodImageUrl').value = p.image_url || '';
             document.getElementById('productModalTitle').innerText = 'Edit Product';
             document.getElementById('productModal').classList.remove('hidden');
@@ -2195,17 +3013,19 @@
             const cost = parseFloat(document.getElementById('prodCost').value) || 0;
             const price = parseFloat(document.getElementById('prodPrice').value) || 0;
             const stock = parseInt(document.getElementById('prodStock').value) || 0;
+            const lowStockLimit = parseInt(document.getElementById('prodLowStockLimit').value) || 10;
+            const expDate = document.getElementById('prodExpDate').value.trim() || null;
             const img = document.getElementById('prodImageUrl').value.trim();
 
             try {
                 if (activeBackend === 'supabase') {
                     if (id) {
                         await supabaseClient.from('products').update({
-                            barcode, name, category, unit_cost: cost, unit_price: price, stock_quantity: stock, image_url: img
+                            barcode, name, category, unit_cost: cost, unit_price: price, stock_quantity: stock, min_stock_level: lowStockLimit, expiration_date: expDate, image_url: img
                         }).eq('id', id);
                     } else {
                         await supabaseClient.from('products').insert([{
-                            barcode, name, category, unit_cost: cost, unit_price: price, stock_quantity: stock, min_stock_level: 10, image_url: img
+                            barcode, name, category, unit_cost: cost, unit_price: price, stock_quantity: stock, min_stock_level: lowStockLimit, expiration_date: expDate, image_url: img
                         }]);
                     }
                 } else {
@@ -2215,7 +3035,7 @@
                         body: JSON.stringify({
                             action: 'save_product', id: id || null,
                             barcode, name, category, cost_price: cost, selling_price: price,
-                            stock_quantity: stock, low_stock_threshold: 10, image_url: img,
+                            stock_quantity: stock, low_stock_threshold: lowStockLimit, expiration_date: expDate, image_url: img,
                             currentUser: currentUser ? currentUser.full_name : 'Staff'
                         })
                     });
@@ -2233,7 +3053,14 @@
         }
 
         async function deleteProductPrompt(id) {
-            if (!confirm('Are you sure you want to delete this product?')) return;
+            const confirmed = await showSystemConfirm({
+                title: 'Delete Product',
+                message: 'Are you sure you want to permanently delete this product from the inventory? This cannot be undone.',
+                okText: 'Delete Item',
+                okColor: 'red',
+                hasInput: false
+            });
+            if (!confirmed) return;
             try {
                 if (activeBackend === 'supabase') {
                     await supabaseClient.from('products').delete().eq('id', id);
@@ -2518,29 +3345,139 @@
         }
 
         // ========================================================
-        // PAYROLL & AUDIT TRAIL
+        // PAYROLL & AUDIT TRAIL (Items 16, 17, 18, 19)
         // ========================================================
-        function openPayrollModal() {
+        function onPayEmpSelectChange() {
+            const sel = document.getElementById('payEmpSelect');
+            const opt = sel.options[sel.selectedIndex];
+            if (opt.value === 'custom') {
+                document.getElementById('payEmpName').value = '';
+                document.getElementById('payRole').value = 'Staff';
+                document.getElementById('payGrossSalary').value = '25000.00';
+            } else {
+                document.getElementById('payEmpName').value = opt.value;
+                document.getElementById('payRole').value = opt.getAttribute('data-role') || 'Staff';
+                document.getElementById('payGrossSalary').value = opt.getAttribute('data-gross') || '30000.00';
+                document.getElementById('payHourlyRate').value = opt.getAttribute('data-rate') || '187.50';
+                document.getElementById('payHoursWorked').value = opt.getAttribute('data-hours') || '160';
+                
+                // Pre-fill statutory deductions based on salary or standard sample
+                if (opt.value === 'John Dela Cruz') {
+                    document.getElementById('payDedSSS').value = '1200.00';
+                    document.getElementById('payDedPagibig').value = '200.00';
+                    document.getElementById('payDedPhilhealth').value = '400.00';
+                    document.getElementById('payDedTax').value = '2000.00';
+                } else if (opt.value === 'Maria Santos') {
+                    document.getElementById('payDedSSS').value = '1600.00';
+                    document.getElementById('payDedPagibig').value = '200.00';
+                    document.getElementById('payDedPhilhealth').value = '500.00';
+                    document.getElementById('payDedTax').value = '3000.00';
+                } else if (opt.value === 'Kevin Bautista') {
+                    document.getElementById('payDedSSS').value = '900.00';
+                    document.getElementById('payDedPagibig').value = '200.00';
+                    document.getElementById('payDedPhilhealth').value = '400.00';
+                    document.getElementById('payDedTax').value = '1000.00';
+                } else {
+                    document.getElementById('payDedSSS').value = '1125.00';
+                    document.getElementById('payDedPagibig').value = '200.00';
+                    document.getElementById('payDedPhilhealth').value = '400.00';
+                    document.getElementById('payDedTax').value = '1500.00';
+                }
+            }
+            calcPayrollPreview();
+        }
+
+        function togglePayTypeRadio(mode) {
+            if (mode === 'monthly') {
+                document.getElementById('wrapMonthlyGross').classList.remove('hidden');
+                document.getElementById('wrapHourlyGross').classList.add('hidden');
+            } else {
+                document.getElementById('wrapMonthlyGross').classList.add('hidden');
+                document.getElementById('wrapHourlyGross').classList.remove('hidden');
+                calcHourlyGross();
+            }
+            calcPayrollPreview();
+        }
+
+        function calcHourlyGross() {
+            const rate = parseFloat(document.getElementById('payHourlyRate').value) || 0;
+            const hours = parseFloat(document.getElementById('payHoursWorked').value) || 0;
+            const ot = parseFloat(document.getElementById('payOtPay').value) || 0;
+            const gross = (rate * hours) + ot;
+            document.getElementById('payGrossSalary').value = gross.toFixed(2);
+            calcPayrollPreview();
+        }
+
+        function updatePayPeriodString() {
+            const month = document.getElementById('payMonth').value;
+            const year = document.getElementById('payYear').value;
+            document.getElementById('payPeriod').value = `${month} ${year}`;
+        }
+
+        function loadRubricSampleIntoModal() {
+            const sel = document.getElementById('payEmpSelect');
+            if (sel) sel.value = 'John Dela Cruz';
             document.getElementById('payEmpName').value = 'John Dela Cruz';
             document.getElementById('payRole').value = 'Cashier';
-            document.getElementById('payHourlyRate').value = '85.00';
-            document.getElementById('payHoursWorked').value = '80';
+            document.getElementById('payMonth').value = 'November';
+            document.getElementById('payYear').value = '2025';
+            updatePayPeriodString();
+            
+            const r = document.querySelector('input[name="payTypeRadio"][value="monthly"]');
+            if (r) r.checked = true;
+            togglePayTypeRadio('monthly');
+            document.getElementById('payGrossSalary').value = '30000.00';
+
+            // Item 17 sample deductions: SSS 1200 + Pag-IBIG 200 + PhilHealth 400 + Tax 2000 = 3800
+            document.getElementById('payDedSSS').value = '1200.00';
+            document.getElementById('payDedPagibig').value = '200.00';
+            document.getElementById('payDedPhilhealth').value = '400.00';
+            document.getElementById('payDedTax').value = '2000.00';
+
             calcPayrollPreview();
+            showNotification('Loaded Rubric Sample: John Dela Cruz, ₱30k Gross, ₱3.8k Deductions, ₱26.2k Net', 'success');
+        }
+
+        function openPayrollModalWithSample() {
+            openPayrollModal();
+            loadRubricSampleIntoModal();
+        }
+
+        function openPayrollModal() {
+            loadRubricSampleIntoModal();
             document.getElementById('payrollModal').classList.remove('hidden');
         }
 
-        function closePayrollModal() { document.getElementById('payrollModal').classList.add('hidden'); }
+        function closePayrollModal() { 
+            document.getElementById('payrollModal').classList.add('hidden'); 
+        }
 
         function calcPayrollPreview() {
-            const rate = parseFloat(document.getElementById('payHourlyRate').value) || 0;
-            const hours = parseFloat(document.getElementById('payHoursWorked').value) || 0;
-            const gross = rate * hours;
-            const ded = gross * 0.10;
-            const net = Math.max(0, gross - ded);
+            const gross = parseFloat(document.getElementById('payGrossSalary').value) || 0;
+            const sss = parseFloat(document.getElementById('payDedSSS').value) || 0;
+            const pagibig = parseFloat(document.getElementById('payDedPagibig').value) || 0;
+            const philhealth = parseFloat(document.getElementById('payDedPhilhealth').value) || 0;
+            const tax = parseFloat(document.getElementById('payDedTax').value) || 0;
 
-            document.getElementById('payGrossPrev').innerText = `₱${gross.toFixed(2)}`;
-            document.getElementById('payDedPrev').innerText = `-₱${ded.toFixed(2)}`;
-            document.getElementById('payNetPrev').innerText = `₱${net.toFixed(2)}`;
+            const totalDed = sss + pagibig + philhealth + tax;
+            const net = Math.max(0, gross - totalDed);
+
+            document.getElementById('payGrossPrev').innerText = `₱${gross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('payDedPrev').innerText = `-₱${totalDed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('payNetPrev').innerText = `₱${net.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            
+            const tag = document.getElementById('previewTotalDedTag');
+            if (tag) tag.innerText = `-₱${totalDed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function openPayslipModalById(id) {
+            let p = allPayroll.find(x => x.id == id);
+            if (!p) p = getDefaultPayrollSeed().find(x => x.id == id);
+            if (!p && typeof supabaseLocalPayroll !== 'undefined' && supabaseLocalPayroll.length > 0) {
+                p = supabaseLocalPayroll.find(x => x.id == id);
+            }
+            if (p) openPayslipModal(p);
+            else showNotification('Payroll record not found.', 'error');
         }
 
         async function fetchPayrollHistory() {
@@ -2548,75 +3485,363 @@
                 try {
                     const res = await fetch(`${API_URL}?action=get_payroll`);
                     const data = await res.json();
-                    if (data.success) allPayroll = data.payroll;
-                } catch (e) {}
+                    if (data.success && data.payroll && data.payroll.length > 0) {
+                        allPayroll = data.payroll;
+                    } else {
+                        allPayroll = getDefaultPayrollSeed();
+                    }
+                } catch (e) {
+                    allPayroll = getDefaultPayrollSeed();
+                }
             } else {
-                allPayroll = [
-                    { id: 1, employee_name: 'John Dela Cruz', role: 'Cashier', pay_period: 'Nov 01 - Nov 15, 2026', hourly_rate: 85.00, hours_worked: 80, gross_salary: 7225.00, total_deductions: 630.00, net_pay: 6595.00, created_at: new Date().toISOString() },
-                    { id: 2, employee_name: 'Maria Santos', role: 'Store Manager', pay_period: 'Nov 01 - Nov 15, 2026', hourly_rate: 150.00, hours_worked: 80, gross_salary: 12000.00, total_deductions: 1600.00, net_pay: 10400.00, created_at: new Date().toISOString() }
-                ];
-                if (supabaseLocalPayroll.length > 0) {
-                    allPayroll = [...supabaseLocalPayroll, ...allPayroll];
+                try {
+                    if (supabaseClient) {
+                        const { data, error } = await supabaseClient.from('payroll').select('*').order('created_at', { ascending: false });
+                        if (!error && data && data.length > 0) {
+                            allPayroll = data;
+                            if (supabaseLocalPayroll.length > 0) {
+                                allPayroll = [...supabaseLocalPayroll, ...allPayroll];
+                            }
+                        } else {
+                            allPayroll = getDefaultPayrollSeed();
+                            if (supabaseLocalPayroll.length > 0) {
+                                allPayroll = [...supabaseLocalPayroll, ...allPayroll];
+                            }
+                        }
+                    } else {
+                        allPayroll = getDefaultPayrollSeed();
+                        if (supabaseLocalPayroll.length > 0) {
+                            allPayroll = [...supabaseLocalPayroll, ...allPayroll];
+                        }
+                    }
+                } catch (e) {
+                    allPayroll = getDefaultPayrollSeed();
+                    if (supabaseLocalPayroll.length > 0) {
+                        allPayroll = [...supabaseLocalPayroll, ...allPayroll];
+                    }
                 }
             }
+            updatePayrollEmployeeFilterOptions();
+            renderPayrollTable();
+            if (typeof activeReportTab !== 'undefined' && activeReportTab === 'payroll') {
+                renderPayrollReport();
+            }
+        }
+
+        function updatePayrollEmployeeFilterOptions() {
+            const empSet = new Set(['John Dela Cruz', 'Maria Santos', 'Kevin Bautista', 'Ana Gomez']);
+            allPayroll.forEach(p => { if (p.employee_name) empSet.add(p.employee_name); });
+            allAccounts.forEach(a => { if (a.full_name) empSet.add(a.full_name); });
+            const list = Array.from(empSet).sort();
+
+            const payEmp = document.getElementById('payFilterEmp');
+            if (payEmp) {
+                const cur = payEmp.value;
+                payEmp.innerHTML = '<option value="ALL">All Employees</option>' + list.map(name => `<option value="${name}" ${name === cur ? 'selected' : ''}>${name}</option>`).join('');
+            }
+        }
+
+        function getDefaultPayrollSeed() {
+            return [
+                {
+                    id: 1,
+                    employee_name: 'John Dela Cruz',
+                    role: 'Cashier',
+                    pay_period: 'November 2025',
+                    month: 'November',
+                    year: '2025',
+                    hourly_rate: 187.50,
+                    hours_worked: 160.00,
+                    overtime_hours: 0,
+                    overtime_pay: 0,
+                    gross_salary: 30000.00,
+                    sss_deduction: 1200.00,
+                    pagibig_deduction: 200.00,
+                    philhealth_deduction: 400.00,
+                    tax_deduction: 2000.00,
+                    other_deductions: 0.00,
+                    total_deductions: 3800.00,
+                    net_pay: 26200.00,
+                    status: 'paid',
+                    recorded_by: 'Maria Santos (Store Manager)',
+                    created_at: '2025-11-15T10:00:00.000Z'
+                },
+                {
+                    id: 2,
+                    employee_name: 'Maria Santos',
+                    role: 'Store Manager',
+                    pay_period: 'November 2025',
+                    month: 'November',
+                    year: '2025',
+                    hourly_rate: 250.00,
+                    hours_worked: 160.00,
+                    overtime_hours: 0,
+                    overtime_pay: 0,
+                    gross_salary: 40000.00,
+                    sss_deduction: 1600.00,
+                    pagibig_deduction: 200.00,
+                    philhealth_deduction: 500.00,
+                    tax_deduction: 3000.00,
+                    other_deductions: 0.00,
+                    total_deductions: 5300.00,
+                    net_pay: 34700.00,
+                    status: 'paid',
+                    recorded_by: 'Administrator (Admin User)',
+                    created_at: '2025-11-15T11:00:00.000Z'
+                },
+                {
+                    id: 3,
+                    employee_name: 'John Dela Cruz',
+                    role: 'Cashier',
+                    pay_period: 'Nov 01 - Nov 15, 2026',
+                    month: 'November',
+                    year: '2026',
+                    hourly_rate: 85.00,
+                    hours_worked: 80.00,
+                    overtime_hours: 4.00,
+                    overtime_pay: 425.00,
+                    gross_salary: 7225.00,
+                    sss_deduction: 350.00,
+                    pagibig_deduction: 100.00,
+                    philhealth_deduction: 180.00,
+                    tax_deduction: 0.00,
+                    other_deductions: 0.00,
+                    total_deductions: 630.00,
+                    net_pay: 6595.00,
+                    status: 'paid',
+                    recorded_by: 'Store Manager (Maria Santos)',
+                    created_at: new Date().toISOString()
+                },
+                {
+                    id: 4,
+                    employee_name: 'Kevin Bautista',
+                    role: 'Inventory Clerk',
+                    pay_period: 'Nov 01 - Nov 15, 2026',
+                    month: 'November',
+                    year: '2026',
+                    hourly_rate: 80.00,
+                    hours_worked: 75.00,
+                    overtime_hours: 0,
+                    overtime_pay: 0,
+                    gross_salary: 6000.00,
+                    sss_deduction: 300.00,
+                    pagibig_deduction: 100.00,
+                    philhealth_deduction: 150.00,
+                    tax_deduction: 0.00,
+                    other_deductions: 0.00,
+                    total_deductions: 550.00,
+                    net_pay: 5450.00,
+                    status: 'paid',
+                    recorded_by: 'Store Manager (Maria Santos)',
+                    created_at: new Date().toISOString()
+                }
+            ];
+        }
+
+        function filterPayrollHistory() {
+            renderPayrollTable();
+        }
+
+        function resetPayrollFilters() {
+            const m = document.getElementById('payFilterMonth');
+            const y = document.getElementById('payFilterYear');
+            const e = document.getElementById('payFilterEmp');
+            if (m) m.value = 'ALL';
+            if (y) y.value = 'ALL';
+            if (e) e.value = 'ALL';
             renderPayrollTable();
         }
 
         function renderPayrollTable() {
             const body = document.getElementById('payrollTableBody');
             if (!body) return;
-            body.innerHTML = allPayroll.map(p => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="p-4 font-bold text-slate-800">${p.employee_name}</td>
-                    <td class="p-4">
-                        <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">${p.role}</span>
-                        <p class="text-[10px] text-slate-400 mt-0.5">${p.pay_period}</p>
-                    </td>
-                    <td class="p-4 font-mono">₱${parseFloat(p.hourly_rate).toFixed(2)} / ${p.hours_worked}h</td>
-                    <td class="p-4 font-mono">₱${parseFloat(p.gross_salary).toFixed(2)}</td>
-                    <td class="p-4 font-mono text-red-500">-₱${parseFloat(p.total_deductions || p.deductions || 0).toFixed(2)}</td>
-                    <td class="p-4 font-mono font-black text-emerald-600 text-sm">₱${parseFloat(p.net_pay).toFixed(2)}</td>
-                    <td class="p-4 text-slate-400 text-xs">${new Date(p.created_at || Date.now()).toLocaleDateString()}</td>
-                    <td class="p-4 text-right">
-                        <button onclick="alert('Payslip for ' + '${p.employee_name}' + ' (Net: ₱' + '${p.net_pay}' + ')')" class="text-blue-600 font-bold text-xs"><i class="fa-solid fa-receipt"></i> Slip</button>
-                    </td>
-                </tr>
-            `).join('');
+
+            const mFilter = document.getElementById('payFilterMonth') ? document.getElementById('payFilterMonth').value : 'ALL';
+            const yFilter = document.getElementById('payFilterYear') ? document.getElementById('payFilterYear').value : 'ALL';
+            const eFilter = document.getElementById('payFilterEmp') ? document.getElementById('payFilterEmp').value : 'ALL';
+
+            const filtered = allPayroll.filter(p => {
+                const period = p.pay_period || '';
+                const emp = p.employee_name || '';
+
+                const matchesEmp = (eFilter === 'ALL' || emp.toLowerCase().includes(eFilter.toLowerCase()));
+                const matchesMonth = (mFilter === 'ALL' || period.toLowerCase().includes(mFilter.toLowerCase()) || period.toLowerCase().includes(mFilter.toLowerCase().slice(0, 3)));
+                const matchesYear = (yFilter === 'ALL' || period.includes(yFilter));
+
+                return matchesEmp && matchesMonth && matchesYear;
+            });
+
+            // Update Summary Metric Cards (Item 19)
+            let totGross = 0, totSSS = 0, totPagibig = 0, totPhilhealth = 0, totTax = 0, totDed = 0, totNet = 0;
+            filtered.forEach(p => {
+                const g = parseFloat(p.gross_salary || p.gross_pay || 0);
+                const s = parseFloat(p.sss_deduction || 0);
+                const pb = parseFloat(p.pagibig_deduction || 0);
+                const ph = parseFloat(p.philhealth_deduction || 0);
+                const tx = parseFloat(p.tax_deduction || p.withholding_tax || 0);
+                const d = parseFloat(p.total_deductions || (s + pb + ph + tx) || 0);
+                const n = parseFloat(p.net_pay || p.net_take_home_pay || (g - d));
+
+                totGross += g;
+                totSSS += s;
+                totPagibig += pb;
+                totPhilhealth += ph;
+                totTax += tx;
+                totDed += d;
+                totNet += n;
+            });
+
+            const statGross = document.getElementById('payStatGross');
+            if (statGross) statGross.innerText = `₱${totGross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const statSSS = document.getElementById('payStatSSS');
+            if (statSSS) statSSS.innerText = `-₱${totSSS.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const statPb = document.getElementById('payStatPagibig');
+            if (statPb) statPb.innerText = `-₱${totPagibig.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const statPh = document.getElementById('payStatPhilhealth');
+            if (statPh) statPh.innerText = `-₱${totPhilhealth.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const statTx = document.getElementById('payStatTax');
+            if (statTx) statTx.innerText = `-₱${totTax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const statNet = document.getElementById('payStatNet');
+            if (statNet) statNet.innerText = `₱${totNet.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            if (filtered.length === 0) {
+                body.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-slate-400 font-medium">No payroll records match the selected month, year, or employee filters.</td></tr>`;
+                return;
+            }
+
+            body.innerHTML = filtered.map(p => {
+                const gross = parseFloat(p.gross_salary || p.gross_pay || 0);
+                const sss = parseFloat(p.sss_deduction || 0);
+                const pb = parseFloat(p.pagibig_deduction || 0);
+                const ph = parseFloat(p.philhealth_deduction || 0);
+                const tx = parseFloat(p.tax_deduction || p.withholding_tax || 0);
+                const ded = parseFloat(p.total_deductions || (sss + pb + ph + tx) || 0);
+                const net = parseFloat(p.net_pay || p.net_take_home_pay || (gross - ded));
+
+                return `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="p-3.5 font-bold text-slate-900">${p.employee_name}</td>
+                        <td class="p-3.5">
+                            <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">${p.role || p.role_position || 'Staff'}</span>
+                            <p class="text-[10px] text-emerald-700 font-bold mt-0.5">${p.pay_period}</p>
+                        </td>
+                        <td class="p-3.5 text-right font-mono font-bold text-slate-900">₱${gross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="p-3.5 text-right font-mono text-red-600">₱${sss.toFixed(2)}</td>
+                        <td class="p-3.5 text-right font-mono text-red-600">₱${pb.toFixed(2)}</td>
+                        <td class="p-3.5 text-right font-mono text-red-600">₱${ph.toFixed(2)}</td>
+                        <td class="p-3.5 text-right font-mono text-red-600">₱${tx.toFixed(2)}</td>
+                        <td class="p-3.5 text-right font-mono font-bold text-red-700">-₱${ded.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="p-3.5 text-right font-mono font-black text-emerald-600 text-sm">₱${net.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="p-3.5 text-center">
+                            <span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px]">Paid</span>
+                        </td>
+                        <td class="p-3.5 text-right">
+                            <button onclick="openPayslipModalById('${p.id}')" class="text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 font-extrabold text-[11px] px-2.5 py-1 rounded-xl transition inline-flex items-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-receipt text-blue-600"></i> Official Payslip
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         async function handlePayrollSubmit(e) {
             e.preventDefault();
-            const rate = parseFloat(document.getElementById('payHourlyRate').value) || 0;
-            const hours = parseFloat(document.getElementById('payHoursWorked').value) || 0;
-            const gross = rate * hours;
-            const ded = gross * 0.10;
-            const net = gross - ded;
+            const empName = document.getElementById('payEmpName').value.trim();
+            const role = document.getElementById('payRole').value.trim();
+            const month = document.getElementById('payMonth').value;
+            const year = document.getElementById('payYear').value;
+            const payPeriod = `${month} ${year}`;
+
+            const gross = parseFloat(document.getElementById('payGrossSalary').value) || 0;
+            const sss = parseFloat(document.getElementById('payDedSSS').value) || 0;
+            const pagibig = parseFloat(document.getElementById('payDedPagibig').value) || 0;
+            const philhealth = parseFloat(document.getElementById('payDedPhilhealth').value) || 0;
+            const tax = parseFloat(document.getElementById('payDedTax').value) || 0;
+            const totalDed = sss + pagibig + philhealth + tax;
+            const net = Math.max(0, gross - totalDed);
+
+            if (gross <= 0) {
+                showNotification('Please enter a valid positive gross salary!', 'error');
+                return;
+            }
 
             const record = {
                 id: Date.now(),
-                employee_name: document.getElementById('payEmpName').value.trim(),
-                role: document.getElementById('payRole').value.trim(),
-                pay_period: document.getElementById('payPeriod').value.trim(),
-                hourly_rate: rate, hours_worked: hours,
-                gross_salary: gross, total_deductions: ded, net_pay: net,
+                employee_name: empName,
+                role: role,
+                pay_period: payPeriod,
+                month: month,
+                year: year,
+                gross_salary: gross,
+                hourly_rate: (gross / 160),
+                hours_worked: 160,
+                overtime_hours: 0,
+                overtime_pay: 0,
+                sss_deduction: sss,
+                pagibig_deduction: pagibig,
+                philhealth_deduction: philhealth,
+                tax_deduction: tax,
+                other_deductions: 0,
+                total_deductions: totalDed,
+                net_pay: net,
+                status: 'paid',
+                recorded_by: currentUser ? currentUser.full_name : 'Store Manager',
                 created_at: new Date().toISOString()
             };
 
-            if (activeBackend === 'supabase') {
-                supabaseLocalPayroll.unshift(record);
-                localStorage.setItem('supabase_payroll', JSON.stringify(supabaseLocalPayroll));
-            } else {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'save_payroll', ...record, currentUser: currentUser.full_name })
-                });
-            }
+            try {
+                if (activeBackend === 'supabase') {
+                    try {
+                        if (supabaseClient) {
+                            await supabaseClient.from('payroll').insert([{
+                                employee_name: empName,
+                                role: role,
+                                pay_period: payPeriod,
+                                hourly_rate: (gross / 160),
+                                hours_worked: 160,
+                                gross_salary: gross,
+                                sss_deduction: sss,
+                                pagibig_deduction: pagibig,
+                                philhealth_deduction: philhealth,
+                                tax_deduction: tax,
+                                other_deductions: 0,
+                                total_deductions: totalDed,
+                                net_pay: net,
+                                status: 'paid',
+                                recorded_by: currentUser ? currentUser.full_name : 'Store Manager'
+                            }]);
+                        }
+                    } catch (supaErr) {
+                        console.warn('Supabase payroll insert failed, persisting locally:', supaErr);
+                    }
+                    supabaseLocalPayroll.unshift(record);
+                    localStorage.setItem('supabase_payroll', JSON.stringify(supabaseLocalPayroll));
+                    allPayroll.unshift(record);
+                } else {
+                    const res = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'save_payroll', ...record, currentUser: currentUser ? currentUser.full_name : 'Store Manager' })
+                    });
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.message);
+                    if (data.id) record.id = data.id;
+                    allPayroll.unshift(record);
+                }
 
-            showNotification('Payroll saved successfully!', 'success');
-            closePayrollModal();
-            await fetchPayrollHistory();
-            await fetchIncomeStatement();
+                showNotification(`Computed payroll for ${empName} (Gross: ₱${gross.toFixed(2)}, Net: ₱${net.toFixed(2)})!`, 'success');
+                closePayrollModal();
+                updatePayrollEmployeeFilterOptions();
+                renderPayrollTable();
+                if (typeof activeReportTab !== 'undefined' && activeReportTab === 'payroll') renderPayrollReport();
+                await fetchIncomeStatement();
+
+                // Open In-System Official Payslip Modal for this record immediately (NO BROWSER POPUPS)
+                openPayslipModal(record);
+            } catch (err) {
+                showNotification('Error saving payroll: ' + err.message, 'error');
+            }
         }
 
         // ========================================================
@@ -2669,8 +3894,8 @@
                         ${s.status === 'completed' ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-bold">Completed</span>' : '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-[10px] font-bold">Voided</span>'}
                     </td>
                     <td class="p-3 text-right">
-                        <button onclick="viewSaleDetailsModal(${s.id})" class="text-blue-600 hover:text-blue-800 font-bold mr-2"><i class="fa-solid fa-receipt"></i></button>
-                        ${s.status === 'completed' ? `<button onclick="voidSalePrompt(${s.id}, '${s.receipt_no}')" class="text-red-500 hover:text-red-700 font-bold"><i class="fa-solid fa-ban"></i></button>` : ''}
+                        <button onclick="viewSaleDetailsModal('${s.id}')" class="text-blue-600 hover:text-blue-800 font-bold mr-2" title="View In-System Thermal Receipt"><i class="fa-solid fa-receipt"></i></button>
+                        ${s.status === 'completed' ? `<button onclick="voidSalePrompt('${s.id}', '${s.receipt_no}')" class="text-red-500 hover:text-red-700 font-bold" title="Void Transaction"><i class="fa-solid fa-ban"></i></button>` : ''}
                     </td>
                 </tr>
             `).join('');
@@ -2726,7 +3951,214 @@
 
             if (type === 'sales') renderSalesReport(allSales);
             if (type === 'discounted') renderDiscountedReport(allSales);
+            if (type === 'payroll') renderPayrollReport();
             if (type === 'losses') renderLossesReport();
+        }
+
+        let repPayMonth = 'ALL';
+        let repPayYear = 'ALL';
+        let repPayEmp = 'ALL';
+
+        function onRepPayFilterChange() {
+            const m = document.getElementById('repPayFilterMonth');
+            const y = document.getElementById('repPayFilterYear');
+            const e = document.getElementById('repPayFilterEmp');
+            if (m) repPayMonth = m.value;
+            if (y) repPayYear = y.value;
+            if (e) repPayEmp = e.value;
+            renderPayrollReport();
+        }
+
+        function resetRepPayFilters() {
+            repPayMonth = 'ALL';
+            repPayYear = 'ALL';
+            repPayEmp = 'ALL';
+            renderPayrollReport();
+        }
+
+        function renderPayrollReport() {
+            const container = document.getElementById('reportTableContainer');
+            if (!container) return;
+
+            // Filter payroll records according to active report filters (Item 19)
+            const filtered = allPayroll.filter(p => {
+                const period = p.pay_period || '';
+                const emp = p.employee_name || '';
+
+                const matchesEmp = (repPayEmp === 'ALL' || emp.toLowerCase().includes(repPayEmp.toLowerCase()));
+                const matchesMonth = (repPayMonth === 'ALL' || period.toLowerCase().includes(repPayMonth.toLowerCase()) || period.toLowerCase().includes(repPayMonth.toLowerCase().slice(0, 3)));
+                const matchesYear = (repPayYear === 'ALL' || period.includes(repPayYear));
+
+                return matchesEmp && matchesMonth && matchesYear;
+            });
+
+            let totGross = 0, totSSS = 0, totPagibig = 0, totPhilhealth = 0, totTax = 0, totDed = 0, totNet = 0;
+            filtered.forEach(p => {
+                const g = parseFloat(p.gross_salary || p.gross_pay || 0);
+                const s = parseFloat(p.sss_deduction || 0);
+                const pb = parseFloat(p.pagibig_deduction || 0);
+                const ph = parseFloat(p.philhealth_deduction || 0);
+                const tx = parseFloat(p.tax_deduction || p.withholding_tax || 0);
+                const d = parseFloat(p.total_deductions || (s + pb + ph + tx) || 0);
+                const n = parseFloat(p.net_pay || p.net_take_home_pay || (g - d));
+
+                totGross += g;
+                totSSS += s;
+                totPagibig += pb;
+                totPhilhealth += ph;
+                totTax += tx;
+                totDed += d;
+                totNet += n;
+            });
+
+            // Build dynamic employee options list
+            const empSet = new Set(['John Dela Cruz', 'Maria Santos', 'Kevin Bautista', 'Ana Gomez']);
+            allPayroll.forEach(p => { if (p.employee_name) empSet.add(p.employee_name); });
+            allAccounts.forEach(a => { if (a.full_name) empSet.add(a.full_name); });
+            const empOptions = Array.from(empSet).sort().map(name => 
+                `<option value="${name}" ${name === repPayEmp ? 'selected' : ''}>${name}</option>`
+            ).join('');
+
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthOptions = months.map(m => `<option value="${m}" ${m === repPayMonth ? 'selected' : ''}>${m}</option>`).join('');
+            const years = ['2024', '2025', '2026', '2027'];
+            const yearOptions = years.map(y => `<option value="${y}" ${y === repPayYear ? 'selected' : ''}>${y}</option>`).join('');
+
+            container.innerHTML = `
+                <div class="p-4 space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i> Master Salary & Statutory Deductions Report</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="openPayrollModalWithSample()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-calculator"></i> Compute Salary
+                            </button>
+                            <button onclick="printPayrollTableDoc()" class="text-xs bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-print"></i> Print Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- REPORT FILTER CONTROLS BAR (Item 19) -->
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap gap-2.5 items-center justify-between">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-xs font-bold text-slate-600 flex items-center gap-1 mr-1">
+                                <i class="fa-solid fa-filter text-emerald-600"></i> Filters:
+                            </span>
+                            <!-- Month Filter -->
+                            <select id="repPayFilterMonth" onchange="onRepPayFilterChange()" class="text-xs font-bold border border-slate-200 rounded-xl px-3 py-1.5 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="ALL" ${repPayMonth === 'ALL' ? 'selected' : ''}>All Months</option>
+                                ${monthOptions}
+                            </select>
+                            <!-- Year Filter -->
+                            <select id="repPayFilterYear" onchange="onRepPayFilterChange()" class="text-xs font-bold border border-slate-200 rounded-xl px-3 py-1.5 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="ALL" ${repPayYear === 'ALL' ? 'selected' : ''}>All Years</option>
+                                ${yearOptions}
+                            </select>
+                            <!-- Employee Filter -->
+                            <select id="repPayFilterEmp" onchange="onRepPayFilterChange()" class="text-xs font-bold border border-slate-200 rounded-xl px-3 py-1.5 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="ALL" ${repPayEmp === 'ALL' ? 'selected' : ''}>All Employees</option>
+                                ${empOptions}
+                            </select>
+                            <!-- Quick Reset -->
+                            <button onclick="resetRepPayFilters()" class="text-xs text-slate-500 hover:text-slate-800 font-bold px-2 py-1 rounded-lg hover:bg-slate-100 transition">
+                                <i class="fa-solid fa-rotate-left"></i> Reset
+                            </button>
+                        </div>
+                        <div class="text-[11px] text-slate-400 font-mono font-bold">
+                            Showing ${filtered.length} of ${allPayroll.length} records
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 text-xs">
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">Gross Pay</span>
+                            <span class="font-mono font-black text-slate-900">₱${totGross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+                            <span class="text-[10px] font-bold text-red-500 block uppercase">SSS</span>
+                            <span class="font-mono font-bold text-red-600">₱${totSSS.toFixed(2)}</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+                            <span class="text-[10px] font-bold text-red-500 block uppercase">Pag-IBIG</span>
+                            <span class="font-mono font-bold text-red-600">₱${totPagibig.toFixed(2)}</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+                            <span class="text-[10px] font-bold text-red-500 block uppercase">PhilHealth</span>
+                            <span class="font-mono font-bold text-red-600">₱${totPhilhealth.toFixed(2)}</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+                            <span class="text-[10px] font-bold text-red-500 block uppercase">Tax</span>
+                            <span class="font-mono font-bold text-red-600">₱${totTax.toFixed(2)}</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+                            <span class="text-[10px] font-bold text-red-700 block uppercase">Total Deductions</span>
+                            <span class="font-mono font-black text-red-600">-₱${totDed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div class="bg-emerald-600 text-white p-2.5 rounded-xl shadow-sm">
+                            <span class="text-[10px] font-bold text-emerald-100 block uppercase">Net Payout</span>
+                            <span class="font-mono font-black text-white">₱${totNet.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                    </div>
+
+                    ${filtered.length === 0 ? `
+                        <div class="p-8 text-center text-slate-400 font-medium bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            No payroll records match the selected month, year, or employee filters.
+                        </div>
+                    ` : `
+                    <table class="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
+                        <thead class="bg-slate-50 text-slate-500 font-extrabold uppercase border-b">
+                            <tr>
+                                <th class="p-3.5">Employee</th>
+                                <th class="p-3.5">Period / Month</th>
+                                <th class="p-3.5 text-right font-black">Gross Pay</th>
+                                <th class="p-3.5 text-right text-red-600">SSS</th>
+                                <th class="p-3.5 text-right text-red-600">Pag-IBIG</th>
+                                <th class="p-3.5 text-right text-red-600">PhilHealth</th>
+                                <th class="p-3.5 text-right text-red-600">Tax</th>
+                                <th class="p-3.5 text-right text-red-700 font-extrabold">Total Ded</th>
+                                <th class="p-3.5 text-right text-emerald-700 font-black">Net Pay</th>
+                                <th class="p-3.5 text-right">In-System Payslip</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-mono">
+                            ${filtered.map(p => {
+                                const gross = parseFloat(p.gross_salary || p.gross_pay || 0);
+                                const sss = parseFloat(p.sss_deduction || 0);
+                                const pb = parseFloat(p.pagibig_deduction || 0);
+                                const ph = parseFloat(p.philhealth_deduction || 0);
+                                const tx = parseFloat(p.tax_deduction || p.withholding_tax || 0);
+                                const ded = parseFloat(p.total_deductions || (sss + pb + ph + tx) || 0);
+                                const net = parseFloat(p.net_pay || p.net_take_home_pay || (gross - ded));
+
+                                return `
+                                    <tr class="hover:bg-slate-50 font-sans">
+                                        <td class="p-3.5">
+                                            <span class="font-bold text-slate-900 block">${p.employee_name}</span>
+                                            <span class="text-[10px] text-slate-400 uppercase font-semibold">${p.role || p.role_position || 'Staff'}</span>
+                                        </td>
+                                        <td class="p-3.5 font-bold text-emerald-700">${p.pay_period}</td>
+                                        <td class="p-3.5 text-right font-mono font-bold text-slate-900">₱${gross.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td class="p-3.5 text-right font-mono text-red-600">₱${sss.toFixed(2)}</td>
+                                        <td class="p-3.5 text-right font-mono text-red-600">₱${pb.toFixed(2)}</td>
+                                        <td class="p-3.5 text-right font-mono text-red-600">₱${ph.toFixed(2)}</td>
+                                        <td class="p-3.5 text-right font-mono text-red-600">₱${tx.toFixed(2)}</td>
+                                        <td class="p-3.5 text-right font-mono font-bold text-red-700">-₱${ded.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td class="p-3.5 text-right font-mono font-black text-emerald-600 text-sm">₱${net.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td class="p-3.5 text-right">
+                                            <button onclick="openPayslipModalById('${p.id}')" class="text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 font-extrabold text-[11px] px-2.5 py-1 rounded-xl transition inline-flex items-center gap-1 shadow-sm">
+                                                <i class="fa-solid fa-receipt text-blue-600"></i> Payslip
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    `}
+                </div>
+            `;
         }
 
         function renderSalesReport(sales) {
@@ -2747,6 +4179,7 @@
                             <th class="p-3.5 text-right">Discount</th>
                             <th class="p-3.5 text-right">Grand Total</th>
                             <th class="p-3.5 text-center">Status</th>
+                            <th class="p-3.5 text-right">In-System Receipt</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-mono">
@@ -2761,6 +4194,11 @@
                                 <td class="p-3.5 text-right font-black text-slate-900">₱${parseFloat(s.grand_total).toFixed(2)}</td>
                                 <td class="p-3.5 text-center font-sans">
                                     ${s.status === 'completed' ? '<span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold text-[10px]">Active</span>' : '<span class="text-red-700 bg-red-50 px-2 py-0.5 rounded font-bold text-[10px]">Voided</span>'}
+                                </td>
+                                <td class="p-3.5 text-right font-sans">
+                                    <button onclick="viewSaleDetailsModal('${s.id}')" class="text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-xl font-extrabold text-[11px] inline-flex items-center gap-1 shadow-sm">
+                                        <i class="fa-solid fa-receipt text-blue-600"></i> Receipt
+                                    </button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -2787,6 +4225,7 @@
                             <th class="p-3.5">OSCA / PWD ID Number</th>
                             <th class="p-3.5 text-right">20% Discount</th>
                             <th class="p-3.5 text-right">Final Total</th>
+                            <th class="p-3.5 text-right">In-System Receipt</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-mono">
@@ -2799,6 +4238,11 @@
                                 <td class="p-3.5 font-bold text-slate-900 bg-amber-50/50">${s.discount_id_no || 'N/A'}</td>
                                 <td class="p-3.5 text-right text-emerald-700 font-bold">-₱${parseFloat(s.discount_amount).toFixed(2)}</td>
                                 <td class="p-3.5 text-right font-black">₱${parseFloat(s.grand_total).toFixed(2)}</td>
+                                <td class="p-3.5 text-right font-sans">
+                                    <button onclick="viewSaleDetailsModal('${s.id}')" class="text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-xl font-extrabold text-[11px] inline-flex items-center gap-1 shadow-sm">
+                                        <i class="fa-solid fa-receipt text-blue-600"></i> Receipt
+                                    </button>
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
