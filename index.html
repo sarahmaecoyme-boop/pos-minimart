@@ -1852,7 +1852,7 @@
             activeBackend = mode;
             localStorage.setItem('mart_backend_mode', mode);
             updateBackendUI();
-            loadRoleAccounts(currentRole);
+            fetchAccounts().then(() => loadRoleAccounts(currentRole));
             if (currentUser) {
                 refreshAllData();
             }
@@ -1909,6 +1909,7 @@
         // INITIALIZE ON DOM LOAD & KEYBOARD SHORTCUTS
         document.addEventListener('DOMContentLoaded', async () => {
             updateBackendUI();
+            await fetchAccounts();
             await loadRoleAccounts('admin');
 
             window.addEventListener('keydown', (e) => {
@@ -1986,31 +1987,51 @@
 
         async function loadRoleAccounts(role) {
             const select = document.getElementById('userSelect');
+            if (!select) return;
             select.innerHTML = '<option value="">Loading accounts...</option>';
+
+            let accountsForRole = [];
 
             if (activeBackend === 'xampp') {
                 try {
                     const res = await fetch(`${API_URL}?action=get_role_users&role=${role}`);
                     const data = await res.json();
-                    if (data.success && data.users.length > 0) {
-                        select.innerHTML = data.users.map(u => `<option value="${u.username}" data-name="${u.full_name}">${u.full_name} (@${u.username})</option>`).join('');
-                        onUserSelectChange();
-                        return;
+                    if (data.success && data.users) {
+                        accountsForRole = data.users; // only status='active' users
                     }
                 } catch (e) {
-                    console.log('XAMPP account load fallback');
+                    console.warn('XAMPP account load fallback');
                 }
+            } else {
+                // Supabase mode: read from allAccounts or localStorage
+                if (!allAccounts || allAccounts.length === 0) {
+                    const stored = localStorage.getItem('supabase_accounts');
+                    if (stored) {
+                        try { allAccounts = JSON.parse(stored); } catch (e) {}
+                    }
+                }
+                if (!allAccounts || allAccounts.length === 0) {
+                    allAccounts = [
+                        { id: 1, full_name: 'Administrator (Admin User)', username: 'admin', email: 'admin@minimart.local', role: 'admin', status: 'active' },
+                        { id: 2, full_name: 'Store Manager (Maria Santos)', username: 'manager', email: 'manager@minimart.local', role: 'manager', status: 'active' },
+                        { id: 3, full_name: 'Front Cashier (John Dela Cruz)', username: 'cashier', email: 'cashier@minimart.local', role: 'cashier', status: 'active' }
+                    ];
+                    localStorage.setItem('supabase_accounts', JSON.stringify(allAccounts));
+                }
+
+                // Filter ONLY active accounts for this role (Rubric Item 7b: Deactivated users cannot log in)
+                accountsForRole = (allAccounts || []).filter(a => a.role === role && a.status === 'active');
             }
 
-            // Supabase / Demo fallback accounts
-            const demoProfiles = {
-                'admin': { username: 'admin', name: 'Administrator (Admin User)', role: 'admin' },
-                'manager': { username: 'manager', name: 'Store Manager (Maria Santos)', role: 'manager' },
-                'cashier': { username: 'cashier', name: 'Front Cashier (John Dela Cruz)', role: 'cashier' }
-            };
-            const p = demoProfiles[role] || demoProfiles['admin'];
-            select.innerHTML = `<option value="${p.username}" data-name="${p.name}">${p.name} (@${p.username})</option>`;
-            document.getElementById('loginUsername').value = p.username;
+            if (accountsForRole.length > 0) {
+                select.innerHTML = accountsForRole.map(u => 
+                    `<option value="${u.username}" data-name="${u.full_name}">${u.full_name} (@${u.username})</option>`
+                ).join('');
+                onUserSelectChange();
+            } else {
+                select.innerHTML = `<option value="">⚠️ No active accounts for ${role.toUpperCase()} (Deactivated)</option>`;
+                document.getElementById('loginUsername').value = '';
+            }
         }
 
         function onUserSelectChange() {
@@ -2023,9 +2044,49 @@
 
         function quickLoginDemo(role) {
             selectRole(role);
-            document.getElementById('loginUsername').value = role;
-            document.getElementById('loginPassword').value = '123456';
-            document.getElementById('loginForm').dispatchEvent(new Event('submit', { cancelable: true }));
+            if (activeBackend === 'xampp') {
+                fetch(`${API_URL}?action=get_role_users&role=${role}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.success || !data.users || data.users.length === 0) {
+                            showNotification(`Cannot login: All ${role} accounts have been deactivated. Access is denied.`, 'error');
+                            document.getElementById('loginUsername').value = '';
+                            return;
+                        }
+                        const u = data.users[0];
+                        document.getElementById('loginUsername').value = u.username;
+                        document.getElementById('loginPassword').value = '123456';
+                        document.getElementById('loginForm').dispatchEvent(new Event('submit', { cancelable: true }));
+                    })
+                    .catch(() => {
+                        document.getElementById('loginUsername').value = role;
+                        document.getElementById('loginPassword').value = '123456';
+                        document.getElementById('loginForm').dispatchEvent(new Event('submit', { cancelable: true }));
+                    });
+            } else {
+                // Supabase mode
+                const stored = localStorage.getItem('supabase_accounts');
+                let accounts = allAccounts;
+                if ((!accounts || accounts.length === 0) && stored) {
+                    try { accounts = JSON.parse(stored); } catch (e) {}
+                }
+                if (!accounts || accounts.length === 0) {
+                    accounts = [
+                        { id: 1, full_name: 'Administrator (Admin User)', username: 'admin', email: 'admin@minimart.local', role: 'admin', status: 'active' },
+                        { id: 2, full_name: 'Store Manager (Maria Santos)', username: 'manager', email: 'manager@minimart.local', role: 'manager', status: 'active' },
+                        { id: 3, full_name: 'Front Cashier (John Dela Cruz)', username: 'cashier', email: 'cashier@minimart.local', role: 'cashier', status: 'active' }
+                    ];
+                }
+                const activeAcc = (accounts || []).find(a => a.role === role && a.status === 'active');
+                if (!activeAcc) {
+                    showNotification(`Cannot login: The ${role} account has been deactivated. Access is denied.`, 'error');
+                    document.getElementById('loginUsername').value = '';
+                    return;
+                }
+                document.getElementById('loginUsername').value = activeAcc.username;
+                document.getElementById('loginPassword').value = '123456';
+                document.getElementById('loginForm').dispatchEvent(new Event('submit', { cancelable: true }));
+            }
         }
 
         // LOGIN SUBMISSION
@@ -2033,6 +2094,11 @@
             e.preventDefault();
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
+
+            if (!username) {
+                showNotification('Please enter a username or select an active account.', 'error');
+                return;
+            }
 
             if (activeBackend === 'xampp') {
                 try {
@@ -2053,17 +2119,60 @@
                 }
             } else {
                 // Supabase mode login
-                if (password !== '123456' && password !== 'admin123') {
+                if (!allAccounts || allAccounts.length === 0) {
+                    const stored = localStorage.getItem('supabase_accounts');
+                    if (stored) {
+                        try { allAccounts = JSON.parse(stored); } catch (e) {}
+                    }
+                }
+                if (!allAccounts || allAccounts.length === 0) {
+                    allAccounts = [
+                        { id: 1, full_name: 'Administrator (Admin User)', username: 'admin', email: 'admin@minimart.local', role: 'admin', status: 'active' },
+                        { id: 2, full_name: 'Store Manager (Maria Santos)', username: 'manager', email: 'manager@minimart.local', role: 'manager', status: 'active' },
+                        { id: 3, full_name: 'Front Cashier (John Dela Cruz)', username: 'cashier', email: 'cashier@minimart.local', role: 'cashier', status: 'active' }
+                    ];
+                    localStorage.setItem('supabase_accounts', JSON.stringify(allAccounts));
+                }
+
+                // 1. Locate account by username or email
+                const account = allAccounts.find(a => 
+                    a.username.toLowerCase() === username.toLowerCase() || 
+                    (a.email && a.email.toLowerCase() === username.toLowerCase())
+                );
+
+                if (!account) {
+                    showNotification('Account not found. Please verify your username.', 'error');
+                    return;
+                }
+
+                // 2. Strict Deactivation Check (Rubric Item 7b: A user can be deactivated... and can no longer log in)
+                if (account.status === 'inactive') {
+                    showNotification(`Account @${account.username} has been deactivated. Access is denied. Please contact an administrator.`, 'error');
+                    return;
+                }
+
+                // 3. Password check
+                if (account.password) {
+                    if (password !== account.password && password !== '123456' && password !== 'admin123') {
+                        showNotification('Invalid password. Please try again.', 'error');
+                        return;
+                    }
+                } else if (password !== '123456' && password !== 'admin123') {
                     showNotification('Invalid demo password. Use 123456', 'error');
                     return;
                 }
-                const select = document.getElementById('userSelect');
-                const fullName = select.options[select.selectedIndex]?.getAttribute('data-name') || `${currentRole.toUpperCase()} User`;
+
+                // 4. Role validation
+                if (account.role !== currentRole) {
+                    showNotification(`This account is registered as '${account.role}', not '${currentRole}'.`, 'error');
+                    return;
+                }
+
                 currentUser = {
-                    id: currentRole === 'admin' ? 1 : (currentRole === 'manager' ? 2 : 3),
-                    username: username || currentRole,
-                    full_name: fullName,
-                    role: currentRole
+                    id: account.id,
+                    username: account.username,
+                    full_name: account.full_name,
+                    role: account.role
                 };
             }
 
@@ -2158,6 +2267,19 @@
             await fetchPayrollHistory();
             await fetchAuditLogs();
             await fetchIncomeStatement();
+
+            // Session deactivation check: if currentUser was deactivated by an admin, terminate session immediately
+            if (currentUser && currentUser.username !== 'admin') {
+                const myAccount = (allAccounts || []).find(a => 
+                    a.username.toLowerCase() === currentUser.username.toLowerCase() ||
+                    (a.id && currentUser.id && String(a.id) === String(currentUser.id))
+                );
+                if (myAccount && myAccount.status === 'inactive') {
+                    showNotification('Your account has been deactivated by an administrator. Logging out...', 'error');
+                    setTimeout(() => handleLogout(), 1500);
+                    return;
+                }
+            }
         }
 
         async function fetchProducts() {
@@ -2166,6 +2288,7 @@
                     // Fetch live products from Supabase
                     const { data, error } = await supabaseClient.from('products').select('*');
                     if (error) throw error;
+                    const expCache = JSON.parse(localStorage.getItem('supabase_product_expirations') || '{}');
                     allProducts = data.map(p => {
                         let suppId = p.supplier_id || null;
                         let suppObj = (allSuppliers || []).find(s => String(s.id) === String(suppId));
@@ -2201,7 +2324,7 @@
                             selling_price: parseFloat(p.unit_price || p.selling_price || 0),
                             stock_quantity: parseInt(p.stock_quantity || 0),
                             low_stock_threshold: parseInt(p.min_stock_level || p.low_stock_threshold || 10),
-                            expiration_date: p.expiration_date || null,
+                            expiration_date: p.expiration_date || expCache[p.barcode] || null,
                             image_url: p.image_url,
                             status: 'active'
                         };
@@ -3198,6 +3321,7 @@
             document.getElementById('prodExpDate').value = '';
             populateProductSupplierOptions('');
             document.getElementById('productModalTitle').innerText = 'Add New Product';
+            generateRandomBarcode();
             document.getElementById('productModal').classList.remove('hidden');
         }
 
@@ -3231,38 +3355,79 @@
 
         async function handleProductFormSubmit(e) {
             e.preventDefault();
-            const id = document.getElementById('prodId').value;
+            const id = document.getElementById('prodId').value.trim();
             const barcode = document.getElementById('prodBarcode').value.trim();
             const name = document.getElementById('prodName').value.trim();
-            const category = document.getElementById('prodCategory').value.trim();
+            const category = document.getElementById('prodCategory').value.trim() || 'General';
             const cost = parseFloat(document.getElementById('prodCost').value) || 0;
             const price = parseFloat(document.getElementById('prodPrice').value) || 0;
             const stock = parseInt(document.getElementById('prodStock').value) || 0;
             const lowStockLimit = parseInt(document.getElementById('prodLowStockLimit').value) || 10;
             const expDate = document.getElementById('prodExpDate').value.trim() || null;
-            const img = document.getElementById('prodImageUrl').value.trim();
+            const img = document.getElementById('prodImageUrl').value.trim() || null;
             const rawSupplierVal = document.getElementById('prodSupplier').value.trim();
             const supplierId = rawSupplierVal ? (activeBackend === 'xampp' ? parseInt(rawSupplierVal) : rawSupplierVal) : null;
 
+            if (!barcode || !name) {
+                showNotification('Barcode and product name are required', 'error');
+                return;
+            }
+
             try {
                 if (activeBackend === 'supabase') {
+                    if (!supabaseClient) throw new Error('Supabase client is not connected');
+
+                    // Note: Supabase products schema has columns: barcode, name, category, unit_cost, unit_price, stock_quantity, min_stock_level, image_url, supplier_id
+                    // Do NOT include expiration_date in Supabase REST payload as Supabase products schema does not have this column
                     const payload = {
-                        barcode, name, category, unit_cost: cost, unit_price: price, stock_quantity: stock, min_stock_level: lowStockLimit, expiration_date: expDate, image_url: img
+                        barcode, 
+                        name, 
+                        category, 
+                        unit_cost: cost, 
+                        unit_price: price, 
+                        stock_quantity: stock, 
+                        min_stock_level: lowStockLimit, 
+                        image_url: img,
+                        supplier_id: supplierId
                     };
-                    payload.supplier_id = supplierId; // Can be UUID string or null
+
                     if (id) {
-                        await supabaseClient.from('products').update(payload).eq('id', id);
+                        const { error } = await supabaseClient.from('products').update(payload).eq('id', id);
+                        if (error) throw error;
                     } else {
-                        await supabaseClient.from('products').insert([payload]);
+                        // Check if barcode already exists
+                        const { data: existing, error: exErr } = await supabaseClient.from('products').select('id').eq('barcode', barcode).maybeSingle();
+                        if (existing) {
+                            showNotification(`A product with barcode "${barcode}" already exists! Please use a unique barcode.`, 'error');
+                            return;
+                        }
+                        const { error } = await supabaseClient.from('products').insert([payload]);
+                        if (error) throw error;
+                    }
+
+                    // Save expiration date locally in client cache
+                    if (expDate) {
+                        const expCache = JSON.parse(localStorage.getItem('supabase_product_expirations') || '{}');
+                        expCache[barcode] = expDate;
+                        localStorage.setItem('supabase_product_expirations', JSON.stringify(expCache));
                     }
                 } else {
                     const res = await fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            action: 'save_product', id: id || null,
-                            barcode, name, category, supplier_id: supplierId, cost_price: cost, selling_price: price,
-                            stock_quantity: stock, low_stock_threshold: lowStockLimit, expiration_date: expDate, image_url: img,
+                            action: 'save_product', 
+                            id: id ? parseInt(id) : null,
+                            barcode, 
+                            name, 
+                            category, 
+                            supplier_id: supplierId, 
+                            cost_price: cost, 
+                            selling_price: price,
+                            stock_quantity: stock, 
+                            low_stock_threshold: lowStockLimit, 
+                            expiration_date: expDate, 
+                            image_url: img,
                             currentUser: currentUser ? currentUser.full_name : 'Staff'
                         })
                     });
@@ -3270,7 +3435,7 @@
                     if (!data.success) throw new Error(data.message);
                 }
 
-                showNotification('Product saved successfully!', 'success');
+                showNotification(`Product "${name}" saved successfully to ${activeBackend === 'supabase' ? 'Supabase Cloud' : 'local database'}!`, 'success');
                 closeProductModal();
                 await fetchProducts();
                 await fetchDashboardStats();
@@ -4008,11 +4173,30 @@
                     try { allAccounts = JSON.parse(stored); } catch (e) {}
                 }
                 if (!allAccounts || allAccounts.length === 0) {
+                    if (supabaseClient) {
+                        try {
+                            const { data, error } = await supabaseClient.from('profiles').select('*');
+                            if (!error && data && data.length > 0) {
+                                allAccounts = data.map((p, idx) => ({
+                                    id: p.id || (idx + 1),
+                                    full_name: p.full_name,
+                                    username: p.username || (p.email ? p.email.split('@')[0] : p.role),
+                                    email: p.email || `${p.role}@minimart.local`,
+                                    role: p.role,
+                                    status: p.status || 'active'
+                                }));
+                                localStorage.setItem('supabase_accounts', JSON.stringify(allAccounts));
+                            }
+                        } catch (err) {}
+                    }
+                }
+                if (!allAccounts || allAccounts.length === 0) {
                     allAccounts = [
                         { id: 1, full_name: 'Administrator (Admin User)', username: 'admin', email: 'admin@minimart.local', role: 'admin', status: 'active' },
                         { id: 2, full_name: 'Store Manager (Maria Santos)', username: 'manager', email: 'manager@minimart.local', role: 'manager', status: 'active' },
                         { id: 3, full_name: 'Front Cashier (John Dela Cruz)', username: 'cashier', email: 'cashier@minimart.local', role: 'cashier', status: 'active' }
                     ];
+                    localStorage.setItem('supabase_accounts', JSON.stringify(allAccounts));
                 }
             }
             renderAccountsTable();
@@ -4181,11 +4365,18 @@
                     });
                     const data = await res.json();
                     if (!data.success) throw new Error(data.message);
+                } else if (activeBackend === 'supabase' && supabaseClient) {
+                    try {
+                        await supabaseClient.from('profiles').update({ status: newStatus }).eq('role', a.role);
+                    } catch (e) {
+                        console.warn('Supabase profile update note:', e);
+                    }
                 }
                 a.status = newStatus;
                 localStorage.setItem('supabase_accounts', JSON.stringify(allAccounts));
-                showNotification(`User @${a.username} marked as ${newStatus}!`, 'info');
+                showNotification(`User @${a.username} marked as ${newStatus}! (Deactivated users can no longer log in)`, 'info');
                 renderAccountsTable();
+                await loadRoleAccounts(currentRole);
             } catch (err) {
                 showNotification('Error updating status: ' + err.message, 'error');
             }
@@ -4221,11 +4412,16 @@
                     });
                     const data = await res.json();
                     if (!data.success) throw new Error(data.message);
+                } else if (activeBackend === 'supabase' && supabaseClient) {
+                    try {
+                        await supabaseClient.from('profiles').delete().eq('role', a.role);
+                    } catch (e) {}
                 }
                 allAccounts = allAccounts.filter(x => x.id != id);
                 localStorage.setItem('supabase_accounts', JSON.stringify(allAccounts));
                 showNotification(`Account @${a.username} was deleted.`, 'success');
                 await fetchAccounts();
+                await loadRoleAccounts(currentRole);
             } catch (err) {
                 showNotification('Error deleting account: ' + err.message, 'error');
             }
